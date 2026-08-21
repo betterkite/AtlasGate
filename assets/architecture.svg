@@ -1,101 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="860" height="560" viewBox="0 0 860 560" font-family="-apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" font-family="-apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6b66"/>
     </marker>
-    <linearGradient id="head" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0d3b32"/>
-      <stop offset="1" stop-color="#087f6d"/>
-    </linearGradient>
   </defs>
 
-  <rect x="0" y="0" width="860" height="560" rx="14" fill="#f4f7f6"/>
+  <rect x="0" y="0" width="900" height="600" rx="14" fill="#f4f7f6"/>
 
   <!-- Title -->
-  <text x="430" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#0d3b32">AtlasGate — Local LLM Infrastructure</text>
-  <text x="430" y="54" text-anchor="middle" font-size="12" fill="#5b6b66">multi-protocol gateway · version-governed LLM Wiki · knowledge graph · evidence-first agent</text>
+  <text x="450" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#0d3b32">AtlasGate · 本地 LLM 基础设施</text>
+  <text x="450" y="56" text-anchor="middle" font-size="12" fill="#5b6b66">多协议网关 · 版本化 LLM Wiki · 知识图谱 · 引用证据 Agent</text>
 
   <!-- Column headers -->
-  <text x="150" y="82" text-anchor="middle" font-size="12" font-weight="600" fill="#3f6f93">CLIENTS</text>
-  <text x="430" y="82" text-anchor="middle" font-size="12" font-weight="600" fill="#0d3b32">ATLASGATE</text>
-  <text x="730" y="82" text-anchor="middle" font-size="12" font-weight="600" fill="#6d5a3f">STORAGE &amp; UPSTREAM</text>
+  <text x="145" y="84" text-anchor="middle" font-size="12" font-weight="600" fill="#3f6f93">客户端 CLIENTS</text>
+  <text x="470" y="84" text-anchor="middle" font-size="12" font-weight="600" fill="#0d3b32">ATLASGATE · 平台</text>
+  <text x="775" y="84" text-anchor="middle" font-size="12" font-weight="600" fill="#6d5a3f">存储 · 上游</text>
 
   <!-- ============ Column 1: Clients ============ -->
   <g>
-    <rect x="50" y="100" width="200" height="40" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
-    <text x="150" y="124" text-anchor="middle" font-size="12" fill="#26312e">Apps / SDKs (OpenAI · Anthropic)</text>
+    <rect x="30" y="104" width="230" height="38" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
+    <text x="145" y="127" text-anchor="middle" font-size="12" fill="#26312e">应用 / SDK（OpenAI · Anthropic）</text>
 
-    <rect x="50" y="152" width="200" height="40" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
-    <text x="150" y="176" text-anchor="middle" font-size="12" fill="#26312e">Web console (build-free)</text>
+    <rect x="30" y="152" width="230" height="38" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
+    <text x="145" y="175" text-anchor="middle" font-size="12" fill="#26312e">Web 控制台（免构建）</text>
 
-    <rect x="50" y="204" width="200" height="40" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
-    <text x="150" y="228" text-anchor="middle" font-size="12" fill="#26312e">MCP tools</text>
+    <rect x="30" y="200" width="230" height="38" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
+    <text x="145" y="223" text-anchor="middle" font-size="12" fill="#26312e">MCP 工具</text>
 
-    <rect x="50" y="256" width="200" height="40" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
-    <text x="150" y="280" text-anchor="middle" font-size="12" fill="#26312e">Clipper / imports (MD·TXT·PDF)</text>
+    <rect x="30" y="248" width="230" height="38" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
+    <text x="145" y="271" text-anchor="middle" font-size="12" fill="#26312e">导入 · Clipper（MD·TXT·PDF）</text>
   </g>
 
   <!-- ============ Column 2: AtlasGate ============ -->
   <g>
     <!-- gateway band -->
-    <rect x="280" y="100" width="300" height="110" rx="10" fill="#eaf4f1" stroke="#087f6d" stroke-width="1.5"/>
-    <text x="430" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#087f6d">GATEWAY</text>
-    <rect x="295" y="130" width="270" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
-    <text x="430" y="149" text-anchor="middle" font-size="11" fill="#26312e">/v1/* — Chat · Responses · Anthropic · Embeddings · SSE</text>
-    <rect x="295" y="168" width="270" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
-    <text x="430" y="187" text-anchor="middle" font-size="11" fill="#26312e">Routing · failover · quotas · budgets · audit ledger</text>
+    <rect x="300" y="104" width="340" height="98" rx="10" fill="#eaf4f1" stroke="#087f6d" stroke-width="1.5"/>
+    <text x="470" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#087f6d">网关 GATEWAY</text>
+    <rect x="314" y="132" width="312" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
+    <text x="470" y="151" text-anchor="middle" font-size="11" fill="#26312e">/v1/* · Chat · Responses · Anthropic · SSE</text>
+    <rect x="314" y="168" width="312" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
+    <text x="470" y="187" text-anchor="middle" font-size="11" fill="#26312e">路由 · 容灾 · 配额 · 预算 · 审计账本</text>
 
     <!-- knowledge band -->
-    <rect x="280" y="224" width="300" height="226" rx="10" fill="#eef2fb" stroke="#3f6f93" stroke-width="1.5"/>
-    <text x="430" y="244" text-anchor="middle" font-size="11" font-weight="700" fill="#3f6f93">KNOWLEDGE PLATFORM (LLM Wiki)</text>
-    <rect x="295" y="254" width="270" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
-    <text x="430" y="273" text-anchor="middle" font-size="11" fill="#26312e">Ingest queue · two-step LLM compile (analysis → generation)</text>
-    <rect x="295" y="292" width="270" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
-    <text x="430" y="311" text-anchor="middle" font-size="11" fill="#26312e">Version-governed pages — Change → merge → immutable Master</text>
-    <rect x="295" y="330" width="270" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
-    <text x="430" y="349" text-anchor="middle" font-size="11" fill="#26312e">Knowledge graph — communities · 5-signal related edges</text>
-    <rect x="295" y="368" width="270" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
-    <text x="430" y="387" text-anchor="middle" font-size="11" fill="#26312e">Agent — hybrid RRF retrieval · rewrite · multi-hop · citations</text>
-    <rect x="295" y="406" width="270" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
-    <text x="430" y="425" text-anchor="middle" font-size="11" fill="#26312e">Lint · reviews · batch publication · md mirror · zip export</text>
+    <rect x="300" y="214" width="340" height="252" rx="10" fill="#eef2fb" stroke="#3f6f93" stroke-width="1.5"/>
+    <text x="470" y="234" text-anchor="middle" font-size="11" font-weight="700" fill="#3f6f93">知识平台 KNOWLEDGE（LLM Wiki）</text>
+    <rect x="314" y="242" width="312" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
+    <text x="470" y="261" text-anchor="middle" font-size="11" fill="#26312e">摄入队列 → 两步 LLM 编译（分析 → 生成）</text>
+    <rect x="314" y="280" width="312" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
+    <text x="470" y="299" text-anchor="middle" font-size="11" fill="#26312e">版本治理：Change → merge → 不可变 Master</text>
+    <rect x="314" y="318" width="312" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
+    <text x="470" y="337" text-anchor="middle" font-size="11" fill="#26312e">知识图谱 · Louvain 社区 · 5 信号相关边</text>
+    <rect x="314" y="356" width="312" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
+    <text x="470" y="375" text-anchor="middle" font-size="11" fill="#26312e">Agent：Hybrid RRF 检索 · 改写 · 多跳扩展</text>
+    <rect x="314" y="394" width="312" height="30" rx="6" fill="#ffffff" stroke="#c8d6d2" stroke-width="1"/>
+    <text x="470" y="413" text-anchor="middle" font-size="11" fill="#26312e">Lint · 批次审阅 · md 镜像 · ZIP 导出</text>
   </g>
 
   <!-- ============ Column 3: Storage & upstream ============ -->
   <g>
-    <rect x="620" y="100" width="220" height="40" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
-    <text x="730" y="116" text-anchor="middle" font-size="11" fill="#26312e">SQLite (WAL)</text>
-    <text x="730" y="132" text-anchor="middle" font-size="10" fill="#5b6b66">pages · versions · ledger · vectors</text>
+    <rect x="680" y="104" width="190" height="38" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
+    <text x="775" y="120" text-anchor="middle" font-size="11" fill="#26312e">SQLite（WAL）</text>
+    <text x="775" y="135" text-anchor="middle" font-size="10" fill="#5b6b66">页面 · 版本 · 账本 · 向量</text>
 
-    <rect x="620" y="152" width="220" height="40" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
-    <text x="730" y="168" text-anchor="middle" font-size="11" fill="#26312e">knowledge/ md mirror</text>
-    <text x="730" y="184" text-anchor="middle" font-size="10" fill="#5b6b66">Obsidian-ready, read-only</text>
+    <rect x="680" y="152" width="190" height="38" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
+    <text x="775" y="168" text-anchor="middle" font-size="11" fill="#26312e">knowledge/ md 镜像</text>
+    <text x="775" y="183" text-anchor="middle" font-size="10" fill="#5b6b66">Obsidian 可直接打开</text>
 
-    <rect x="620" y="204" width="220" height="40" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
-    <text x="730" y="220" text-anchor="middle" font-size="11" fill="#26312e">Local ONNX embedding</text>
-    <text x="730" y="236" text-anchor="middle" font-size="10" fill="#5b6b66">bge-small-zh · offline</text>
+    <rect x="680" y="200" width="190" height="38" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
+    <text x="775" y="216" text-anchor="middle" font-size="11" fill="#26312e">本地 ONNX embedding</text>
+    <text x="775" y="231" text-anchor="middle" font-size="10" fill="#5b6b66">bge-small-zh · 离线</text>
 
-    <rect x="620" y="256" width="220" height="40" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
-    <text x="730" y="272" text-anchor="middle" font-size="11" fill="#26312e">Upstream models</text>
-    <text x="730" y="288" text-anchor="middle" font-size="10" fill="#5b6b66">DeepSeek · OpenAI · Anthropic</text>
+    <rect x="680" y="248" width="190" height="38" rx="8" fill="#ffffff" stroke="#c8d6d2" stroke-width="1.2"/>
+    <text x="775" y="264" text-anchor="middle" font-size="11" fill="#26312e">上游模型</text>
+    <text x="775" y="279" text-anchor="middle" font-size="10" fill="#5b6b66">DeepSeek · OpenAI · Anthropic</text>
   </g>
 
   <!-- Arrows: clients -> gateway -->
-  <line x1="250" y1="120" x2="280" y2="130" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <line x1="250" y1="172" x2="280" y2="150" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <line x1="250" y1="224" x2="280" y2="170" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <line x1="250" y1="276" x2="280" y2="300" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="260" y1="123" x2="300" y2="140" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="260" y1="171" x2="300" y2="156" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="260" y1="219" x2="300" y2="172" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="260" y1="267" x2="300" y2="300" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
 
-  <!-- Arrows: gateway <-> knowledge -->
-  <line x1="430" y1="210" x2="430" y2="224" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <!-- Arrow: gateway -> knowledge -->
+  <line x1="470" y1="202" x2="470" y2="214" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
 
   <!-- Arrows: knowledge -> storage -->
-  <line x1="580" y1="300" x2="620" y2="120" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <line x1="580" y1="340" x2="620" y2="172" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <line x1="580" y1="390" x2="620" y2="224" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="640" y1="260" x2="680" y2="123" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="640" y1="296" x2="680" y2="171" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="640" y1="372" x2="680" y2="219" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
 
   <!-- Arrow: gateway -> upstream -->
-  <line x1="580" y1="180" x2="620" y2="276" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="640" y1="183" x2="680" y2="267" stroke="#5b6b66" stroke-width="1.4" marker-end="url(#arrow)"/>
 
   <!-- Footer -->
-  <text x="430" y="540" text-anchor="middle" font-size="10.5" fill="#5b6b66">Zero npm runtime dependencies · offline-first · local SQLite + local ONNX embeddings</text>
+  <text x="450" y="580" text-anchor="middle" font-size="11" fill="#5b6b66">零 npm 运行依赖 · 离线优先 · 本地 SQLite + 本地 ONNX Embedding</text>
 </svg>

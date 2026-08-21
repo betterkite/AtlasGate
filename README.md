@@ -1,51 +1,55 @@
 # AtlasGate
 
-**Local LLM infrastructure for small engineering teams**: a multi-protocol OpenAI/Anthropic API gateway, a version-governed **LLM Wiki** (Karpathy methodology), a knowledge graph, and an evidence-first knowledge agent.
+**面向小型研发团队的本地 LLM 基础设施**：OpenAI / Anthropic 多协议 API 网关 + 具备协作版本治理、LLM 自动编译与关系图谱的知识库（LLM Wiki）+ 默认引用证据的知识 Agent。
+
+**Local LLM infrastructure for small engineering teams**: a multi-protocol OpenAI/Anthropic API gateway, a version-governed **LLM Wiki**, a knowledge graph, and an evidence-first knowledge agent.
 
 [简体中文](README.zh-CN.md) · [English](README.en-US.md) · [中文文档导航](docs/zh-CN/README.md) · [English docs](docs/en-US/README.md)
 
 ---
 
-## Overview
+## 项目介绍 / Overview
 
-Most RAG systems answer by re-reading raw documents on every query, so **knowledge never accumulates**. AtlasGate follows Karpathy's [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) methodology instead: an LLM **compiles** ingested sources into a continuously maintained wiki — entities, concepts, source summaries, and system pages (`index.md` / `log.md` / `overview.md`) — governed by a versioned Change → merge → immutable-Master audit chain. The knowledge agent then retrieves from that compiled wiki with citations, offline-first, zero npm runtime dependencies.
+传统 RAG 每次查询都从原始文档现取现答，**知识不会积累**。AtlasGate 遵循 Karpathy 的 [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) 方法论：LLM 把摄入的素材**编译**成持续维护的 Wiki——实体页、概念页、素材摘要页，以及 `index.md` / `log.md` / `overview.md` 系统页——全部经由版本化审计链（Change → merge → 不可变 Master）治理。知识 Agent 从这份编译后的知识库检索并带引用回答，**离线优先、零 npm 运行依赖**。
 
-> The design is informed by [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f), [`llm-wiki-skill`](https://github.com/sdyckjq-lab/llm-wiki-skill), and [`llm_wiki`](https://github.com/nashsu/llm_wiki); the implementation is independent.
+Most RAG systems answer by re-reading raw documents on every query, so knowledge never accumulates. AtlasGate instead follows Karpathy's [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f): an LLM **compiles** ingested sources into a continuously maintained wiki — entities, concepts, source summaries, and system pages — governed by a versioned Change → merge → immutable-Master audit chain. The agent retrieves from that compiled wiki with citations, offline-first, with zero npm runtime dependencies.
+
+> 设计参考 [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)、[`llm-wiki-skill`](https://github.com/sdyckjq-lab/llm-wiki-skill)、[`llm_wiki`](https://github.com/nashsu/llm_wiki)；实现为独立设计。The implementation is independent.
 
 ![AtlasGate architecture](assets/architecture.svg)
 
-## What it does
+## 核心能力 / What it does
 
-| Component | Highlights |
+| 组件 Component | 亮点 Highlights |
 | --- | --- |
-| **Multi-protocol gateway** | Chat Completions, Responses, Anthropic Messages, Embeddings, SSE, model listing, token counting |
-| **Smart routing** | Vision-capability filtering, quality/cost/latency/reliability scoring, credential pools, cooldowns, bounded failover, per-attempt audit evidence |
-| **Usage governance** | Client-key scopes, model allowlists, RPM/TPM limits, token quotas, monthly budgets, revocation, retained audit history, upstream balance view |
-| **LLM Wiki compiler** | Two-step analysis → generation, persistent ingest queue, SHA256 dedup, per-KB `review`/`auto` ingest modes, batch review, Lint, source traceability |
-| **Version governance** | Multi-user Changes, optimistic concurrency, conflict ledger, tombstones, versioned documents and graph |
-| **Knowledge graph** | Pure-JS ForceAtlas2 layout, Louvain communities, 5-signal related edges, search/drag/hover/minimap |
-| **Knowledge agent** | Hybrid retrieval — lexical bigram + local dense page vectors fused by **RRF**, graph-degree pseudo-rerank, zero-evidence query rewriting, wikilink **multi-hop** expansion, evidence-sufficiency discipline, `save_to_wiki` |
-| **Console & disk** | Build-free 8-view web console, Obsidian-ready `knowledge/` md mirror, ZIP export, MCP |
+| **多协议网关** Multi-protocol gateway | Chat Completions · Responses · Anthropic Messages · Embeddings · SSE · 模型列表 · Token 计数 |
+| **智能路由** Smart routing | 视觉能力过滤、质量/成本/延迟/可靠性评分、凭据池、冷却与有界 Failover、每次 attempt 留痕 |
+| **用量治理** Usage governance | 客户端密钥 scope · 模型白名单 · RPM/TPM · Token 配额 · 月预算 · 撤销 · 审计保留 · 上游余额展示 |
+| **LLM Wiki 编译** | 两步编译（分析→生成）、持久化摄入队列、SHA256 去重、per-KB `review`/`auto` 模式、批次审阅、Lint、溯源 |
+| **版本治理** Version governance | 多用户 Change、乐观并发、冲突账本、tombstone、版本化文档与图谱 |
+| **知识图谱** Knowledge graph | 纯 JS ForceAtlas2 布局、Louvain 社区、5 信号相关边、搜索/拖拽/悬停/小地图 |
+| **知识 Agent** | 混合检索——词法 bigram + 本地稠密页面向量 **RRF** 融合、图谱度数伪重排、零证据查询改写、wikilink **多跳**扩展、证据充分性约束、`save_to_wiki` |
+| **控制台与磁盘** Console & disk | 免构建 8 视图 Web 控制台、Obsidian 可打开的 `knowledge/` md 镜像、ZIP 导出、MCP |
 
 ```mermaid
 flowchart LR
-  subgraph Clients["CLIENTS"]
-    APP["Apps / SDKs"]
-    WEB["Web console"]
-    MCP["MCP tools"]
-    IMP["Imports · Clipper"]
+  subgraph Clients["客户端 CLIENTS"]
+    APP["应用 / SDK"]
+    WEB["Web 控制台"]
+    MCP["MCP 工具"]
+    IMP["导入 · Clipper"]
   end
   subgraph Core["ATLASGATE"]
-    GW["Gateway — /v1/* multi-protocol · routing · quotas · audit"]
-    ING["Ingest queue → two-step LLM compile"]
-    WIKI["Version-governed wiki — Change → merge → Master"]
-    GRAPH["Knowledge graph — communities · related edges"]
-    AGENT["Agent — hybrid RRF retrieval · rewrite · multi-hop"]
+    GW["网关 Gateway — /v1/* 多协议 · 路由 · 配额 · 审计"]
+    ING["摄入队列 → 两步 LLM 编译"]
+    WIKI["版本化 Wiki — Change → merge → Master"]
+    GRAPH["知识图谱 — 社区 · 相关边"]
+    AGENT["Agent — Hybrid RRF 检索 · 改写 · 多跳"]
   end
-  subgraph Store["STORAGE & UPSTREAM"]
-    DB[("SQLite (WAL) — pages · versions · ledger · vectors")]
-    MIRROR["knowledge/ md mirror — Obsidian-ready"]
-    EMB[("Local ONNX embedding — bge-small-zh")]
+  subgraph Store["存储 · 上游 STORAGE & UPSTREAM"]
+    DB[("SQLite（WAL）— 页面 · 版本 · 账本 · 向量")]
+    MIRROR["knowledge/ md 镜像 — Obsidian 可开"]
+    EMB[("本地 ONNX embedding — bge-small-zh")]
     UP["DeepSeek · OpenAI · Anthropic"]
   end
   APP --> GW
@@ -63,15 +67,15 @@ flowchart LR
   GW --> UP
 ```
 
-## Quick start
+## 快速开始 / Quick start
 
-Requirements: **Node.js 24+** and **Python 3.11+** (auto-detects `python` / `python3`). No npm dependencies.
+要求：**Node.js 24+** 与 **Python 3.11+**（自动探测 `python`/`python3`，无 npm 依赖）。
 
 ```bash
 npm start
 ```
 
-Open **http://127.0.0.1:4310** — console defaults `admin / atlasgate-admin`; gateway key `atlasgate-dev-key`.
+打开 **http://127.0.0.1:4310** —— 控制台默认 `admin / atlasgate-admin`；网关 Key `atlasgate-dev-key`。
 
 ```bash
 curl http://127.0.0.1:4310/v1/chat/completions \
@@ -79,30 +83,29 @@ curl http://127.0.0.1:4310/v1/chat/completions \
   -d '{"model":"auto","messages":[{"role":"user","content":"ping"}]}'
 ```
 
-> The built-in `atlas-mini` provider validates the full local path with no real upstream. Configure an OpenAI-compatible Provider (e.g. DeepSeek) to enable real routing and LLM compilation. Dense retrieval works fully offline with a local ONNX embedding service (`python/atlasgate_agent/embedding_worker.py`).
+> 内置 `atlas-mini` mock 可离线验证全链路；配置 OpenAI 兼容 Provider（如 DeepSeek）后启用真实路由与 LLM 编译。稠密检索可完全离线（本地 ONNX embedding 服务 `python/atlasgate_agent/embedding_worker.py`）。
 
-## Documentation
+## 文档 / Documentation
 
-- **中文文档导航** — [docs/zh-CN/README.md](docs/zh-CN/README.md) · [从零复现](docs/zh-CN/GETTING_STARTED.md) · [项目介绍](docs/zh-CN/INTRODUCTION.md)
-- **English docs** — [docs/en-US/README.md](docs/en-US/README.md) · [Getting started](docs/en-US/GETTING_STARTED.md)
-- Feature tracking — [guides/FEATURE_MATRIX.md](docs/zh-CN/guides/FEATURE_MATRIX.md) · Architecture decisions (ADR-001~014) — [DECISIONS.md](docs/zh-CN/DECISIONS.md)
-- RAG retrieval upgrade plan — [RAG_PLAN.md](docs/zh-CN/RAG_PLAN.md)
+- **中文** — [docs/zh-CN/README.md](docs/zh-CN/README.md) · [从零复现](docs/zh-CN/GETTING_STARTED.md) · [项目介绍](docs/zh-CN/INTRODUCTION.md) · [RAG 升级计划](docs/zh-CN/RAG_PLAN.md)
+- **English** — [docs/en-US/README.md](docs/en-US/README.md) · [Getting started](docs/en-US/GETTING_STARTED.md)
+- 功能追踪 — [guides/FEATURE_MATRIX.md](docs/zh-CN/guides/FEATURE_MATRIX.md) · 架构决策（ADR-001~014）— [DECISIONS.md](docs/zh-CN/DECISIONS.md)
 
-## Storage & boundaries
+## 存储与边界 / Storage & boundaries
 
-Knowledge pages are versioned in SQLite at `data/atlasgate.db`. `knowledge/<kb>/` is a read-only Markdown mirror generated after publication; ZIP export is available from the console.
+知识页面版本化存储在 SQLite（`data/atlasgate.db`）；`knowledge/<库>/` 是发布后生成的只读 Markdown 镜像；控制台可导出 ZIP。
 
-AtlasGate is a single-node modular monolith. The console targets loopback / trusted private networks; public deployment needs an authenticated admin plane, TLS, egress controls, and application-level secret protection (see [SECURITY.md](docs/zh-CN/SECURITY.md)). Provider credentials are not encrypted at the application layer.
+单机模块化单体；控制台面向回环/可信私网——公网部署需认证管理面、TLS、出网管控与应用层密钥保护（见 [SECURITY.md](docs/zh-CN/SECURITY.md)）；Provider 凭据未做应用层加密。
 
-## Tests
+## 测试 / Tests
 
 ```bash
-npm test          # Node + Python suites
-npm run check     # syntax + gate
+npm test          # Node + Python 全量
+npm run check     # 语法 + 门禁
 ```
 
-See [TEST_PLAN.md](docs/zh-CN/TEST_PLAN.md) / [TEST_REPORT.md](docs/zh-CN/TEST_REPORT.md). Current: **Node 84 · Python 19**.
+见 [TEST_PLAN.md](docs/zh-CN/TEST_PLAN.md) / [TEST_REPORT.md](docs/zh-CN/TEST_REPORT.md)。当前：**Node 84 · Python 19**。
 
-## License
+## 许可证 / License
 
 [MIT](LICENSE)
