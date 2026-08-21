@@ -127,6 +127,7 @@ function navigate(view) {
 
 async function render() {
   const app = document.querySelector("#app");
+  const previousScroll = window.scrollY;
   app.innerHTML = '<div class="loading">正在读取运行状态...</div>';
   try {
     await ({
@@ -140,6 +141,8 @@ async function render() {
       wiki: renderWiki,
     })[state.view](app);
     document.querySelector("#service-status").textContent = "服务正常";
+    // Preserve the scroll position across re-renders (e.g. attach/delete a skill).
+    requestAnimationFrame(() => window.scrollTo(0, previousScroll));
   } catch (error) {
     app.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
     document.querySelector("#service-status").textContent = "连接失败";
@@ -1193,7 +1196,7 @@ async function renderSkills(app) {
     <section class="section split">
       <div class="panel">
         <div class="panel-title"><h3>Skill Registry</h3><span class="badge">${skills.length} SKILLS</span></div>
-        ${skills.map((skill) => `<div class="skill-row"><div><strong>${escapeHtml(skill.name)} <span class="badge neutral">v${escapeHtml(skill.version)}</span> <span class="badge ${skill.status === "active" ? "" : "warn"}">${escapeHtml(skill.status)}</span></strong><p>${escapeHtml(skill.description)} · ${skill.usage_count} runs · value ${skill.value_score}</p></div><button class="toggle ${skill.attached ? "on" : ""}" data-skill="${attr(skill.id)}" data-attached="${skill.attached}" aria-label="切换 Skill"></button></div>`).join("")}
+        ${skills.map((skill) => `<div class="skill-row"><div><strong>${escapeHtml(skill.name)} <span class="badge neutral">v${escapeHtml(skill.version)}</span> <span class="badge ${skill.status === "active" ? "" : "warn"}">${escapeHtml(skill.status)}</span></strong><p>${escapeHtml(skill.description)} · ${skill.usage_count} runs · value ${skill.value_score}</p></div><div class="row-actions"><button type="button" class="button secondary compact-button" data-skill-view="${attr(skill.id)}">查看</button><button type="button" class="button danger compact-button" data-skill-delete="${attr(skill.id)}">删除</button><button type="button" class="toggle ${skill.attached ? "on" : ""}" data-skill="${attr(skill.id)}" data-attached="${skill.attached}" aria-label="切换 Skill"></button></div></div>`).join("")}
       </div>
       <div class="panel">
         <div class="panel-title"><h3>Session Memory</h3><span class="badge neutral">${memories.length} ACTIVE</span></div>
@@ -1223,6 +1226,22 @@ async function renderSkills(app) {
   document.querySelectorAll("[data-skill]").forEach((button) => button.addEventListener("click", async () => {
     try {
       await api(`/api/agents/knowledge-agent/skills/${button.dataset.skill}`, { method: "POST", body: { attached: button.dataset.attached !== "true" } });
+      render();
+    } catch (error) { toast(error.message); }
+  }));
+  document.querySelectorAll("[data-skill-view]").forEach((button) => button.addEventListener("click", () => {
+    const skill = skills.find((item) => item.id === button.dataset.skillView);
+    if (!skill) return;
+    const retrieval = skill.retrieval_json && skill.retrieval_json !== "{}"
+      ? `\n检索策略: ${skill.retrieval_json}` : "";
+    alert(`技能: ${skill.name} v${skill.version} (${skill.status})\n\n描述: ${skill.description}\n${retrieval}\n\nInstructions:\n${skill.instructions}`);
+  }));
+  document.querySelectorAll("[data-skill-delete]").forEach((button) => button.addEventListener("click", async () => {
+    const skill = skills.find((item) => item.id === button.dataset.skillDelete);
+    if (!skill || !confirm(`确定删除技能「${skill.name}」？删除后不可恢复。`)) return;
+    try {
+      await api(`/api/skills/${skill.id}`, { method: "DELETE" });
+      toast("Skill 已删除");
       render();
     } catch (error) { toast(error.message); }
   }));

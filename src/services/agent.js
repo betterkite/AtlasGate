@@ -78,6 +78,14 @@ export class AgentService {
     return this.db.prepare("SELECT * FROM skill_imports ORDER BY created_at DESC,rowid DESC LIMIT ?").all(Math.min(500, Number(limit)));
   }
 
+  deleteSkill(skillId) {
+    const skill = this.db.prepare("SELECT * FROM skills WHERE id=?").get(skillId);
+    if (!skill) throw new HttpError(404, "Skill not found", "skill_not_found");
+    this.db.prepare("DELETE FROM agent_skills WHERE skill_id=?").run(skillId);
+    this.db.prepare("DELETE FROM skills WHERE id=?").run(skillId);
+    return { id: skillId, name: skill.name, deleted: true };
+  }
+
   updateSkill(skillId, input) {
     const skill = this.db.prepare("SELECT * FROM skills WHERE id=?").get(skillId);
     if (!skill) throw new HttpError(404, "Skill not found", "skill_not_found");

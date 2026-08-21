@@ -243,6 +243,7 @@ export function createApp(overrides = {}) {
   router.post("/api/skills/import", ({ body }) => ({ status: 201, body: agent.importSkill(body) }));
   router.get("/api/skill-imports", ({ url }) => ({ body: agent.listSkillImports(url.searchParams.get("limit") ?? 100) }));
   router.patch("/api/skills/:id", ({ params, body }) => ({ body: agent.updateSkill(params.id, body) }));
+  router.delete("/api/skills/:id", ({ params }) => ({ body: agent.deleteSkill(params.id) }));
   router.get("/api/skills/:id/versions", ({ params }) => ({ body: agent.skillVersions(params.id) }));
   router.post("/api/skills/recommend", ({ body }) => ({ body: agent.recommendSkills(body.description ?? "", body.limit) }));
   router.post("/api/skills/merge", ({ body }) => ({ status: 201, body: agent.mergeSkills(body) }));
