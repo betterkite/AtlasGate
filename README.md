@@ -1,5 +1,7 @@
 # AtlasGate
 
+[English](README.en-US.md)
+
 **面向小型研发团队的本地 LLM 基础设施**：OpenAI / Anthropic 多协议 API 网关 + 具备协作版本治理、LLM 自动编译与关系图谱的知识库（LLM Wiki）+ 默认引用证据的知识 Agent。
 
 [中文文档导航](docs/zh-CN/README.md) · [项目介绍](docs/zh-CN/INTRODUCTION.md)

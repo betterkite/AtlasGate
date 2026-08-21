@@ -5,7 +5,7 @@
 按读者角色选择入口：
 
 ## 🚀 新手 / 复现
-- [中文项目说明](../../README.zh-CN.md) — 项目定位、能力总览、一分钟启动
+- [中文项目说明](../../README.md) — 项目定位、能力总览、一分钟启动
 - [Getting Started（从零复现）](GETTING_STARTED.md) — 环境要求 + 实测命令 checklist，照做即通
 - [Introduction（项目介绍）](INTRODUCTION.md) — 定位、设计理念、三层模型、两类密钥、术语表
 

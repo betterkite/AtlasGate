@@ -48,5 +48,5 @@
 ## 下一步
 
 - 新手从这里开始：[Getting Started（从零复现）](GETTING_STARTED.md)
-- 想看能力清单与快速启动：[中文 README](../../README.zh-CN.md)
+- 想看能力清单与快速启动：[中文 README](../../README.md)
 - 想了解每个模块怎么用：[docs/zh-CN/README.md](README.md)（中文导航主页）
