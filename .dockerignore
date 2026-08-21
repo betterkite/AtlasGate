@@ -1,0 +1,9 @@
+.git
+.github
+.env
+data
+node_modules
+**/__pycache__
+**/*.pyc
+docs/TEST_REPORT.md
+npm-debug.log*

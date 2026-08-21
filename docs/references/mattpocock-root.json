@@ -1,0 +1,274 @@
+[
+  {
+    "name": ".agents",
+    "path": ".agents",
+    "sha": "914f8446358ca6cbde26036bd39aea614e9ee357",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/.agents?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/.agents",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/914f8446358ca6cbde26036bd39aea614e9ee357",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/.agents?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/914f8446358ca6cbde26036bd39aea614e9ee357",
+      "html": "https://github.com/mattpocock/skills/tree/main/.agents"
+    }
+  },
+  {
+    "name": ".changeset",
+    "path": ".changeset",
+    "sha": "e680276bbfd265f244a31b08b361976e33a48c94",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/.changeset?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/.changeset",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/e680276bbfd265f244a31b08b361976e33a48c94",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/.changeset?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/e680276bbfd265f244a31b08b361976e33a48c94",
+      "html": "https://github.com/mattpocock/skills/tree/main/.changeset"
+    }
+  },
+  {
+    "name": ".claude-plugin",
+    "path": ".claude-plugin",
+    "sha": "e0e14ff267458d6871918ef8972ef331867bb880",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/.claude-plugin?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/.claude-plugin",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/e0e14ff267458d6871918ef8972ef331867bb880",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/.claude-plugin?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/e0e14ff267458d6871918ef8972ef331867bb880",
+      "html": "https://github.com/mattpocock/skills/tree/main/.claude-plugin"
+    }
+  },
+  {
+    "name": ".github",
+    "path": ".github",
+    "sha": "93fa3f4faa6e26e4b9480e92abb45e09842fb04e",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/.github?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/.github",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/93fa3f4faa6e26e4b9480e92abb45e09842fb04e",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/.github?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/93fa3f4faa6e26e4b9480e92abb45e09842fb04e",
+      "html": "https://github.com/mattpocock/skills/tree/main/.github"
+    }
+  },
+  {
+    "name": ".gitignore",
+    "path": ".gitignore",
+    "sha": "3c3629e647f5ddf82548912e337bea9826b434af",
+    "size": 13,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/.gitignore?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/blob/main/.gitignore",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/blobs/3c3629e647f5ddf82548912e337bea9826b434af",
+    "download_url": "https://raw.githubusercontent.com/mattpocock/skills/main/.gitignore",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/.gitignore?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/blobs/3c3629e647f5ddf82548912e337bea9826b434af",
+      "html": "https://github.com/mattpocock/skills/blob/main/.gitignore"
+    }
+  },
+  {
+    "name": ".out-of-scope",
+    "path": ".out-of-scope",
+    "sha": "fadc1fabb55628dc758a2275fcbd2721ea75e08a",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/.out-of-scope?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/.out-of-scope",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/fadc1fabb55628dc758a2275fcbd2721ea75e08a",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/.out-of-scope?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/fadc1fabb55628dc758a2275fcbd2721ea75e08a",
+      "html": "https://github.com/mattpocock/skills/tree/main/.out-of-scope"
+    }
+  },
+  {
+    "name": "AGENTS.md",
+    "path": "AGENTS.md",
+    "sha": "681311eb9cf453d0faddf3aacaec7357e97ba8e9",
+    "size": 9,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/AGENTS.md?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/blob/main/AGENTS.md",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/blobs/681311eb9cf453d0faddf3aacaec7357e97ba8e9",
+    "download_url": "https://raw.githubusercontent.com/mattpocock/skills/main/AGENTS.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/AGENTS.md?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/blobs/681311eb9cf453d0faddf3aacaec7357e97ba8e9",
+      "html": "https://github.com/mattpocock/skills/blob/main/AGENTS.md"
+    }
+  },
+  {
+    "name": "CHANGELOG.md",
+    "path": "CHANGELOG.md",
+    "sha": "26d68ffa7cf2f58471abd578042dded7b75675aa",
+    "size": 44408,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/CHANGELOG.md?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/blob/main/CHANGELOG.md",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/blobs/26d68ffa7cf2f58471abd578042dded7b75675aa",
+    "download_url": "https://raw.githubusercontent.com/mattpocock/skills/main/CHANGELOG.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/CHANGELOG.md?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/blobs/26d68ffa7cf2f58471abd578042dded7b75675aa",
+      "html": "https://github.com/mattpocock/skills/blob/main/CHANGELOG.md"
+    }
+  },
+  {
+    "name": "CLAUDE.md",
+    "path": "CLAUDE.md",
+    "sha": "8b87834045fa73090c81d8c67d2d0c8b3725eee5",
+    "size": 3407,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/CLAUDE.md?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/blob/main/CLAUDE.md",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/blobs/8b87834045fa73090c81d8c67d2d0c8b3725eee5",
+    "download_url": "https://raw.githubusercontent.com/mattpocock/skills/main/CLAUDE.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/CLAUDE.md?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/blobs/8b87834045fa73090c81d8c67d2d0c8b3725eee5",
+      "html": "https://github.com/mattpocock/skills/blob/main/CLAUDE.md"
+    }
+  },
+  {
+    "name": "CONTEXT.md",
+    "path": "CONTEXT.md",
+    "sha": "a8b514c13b283c4ead4722f5e3589a3e48564ea3",
+    "size": 1786,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/CONTEXT.md?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/blob/main/CONTEXT.md",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/blobs/a8b514c13b283c4ead4722f5e3589a3e48564ea3",
+    "download_url": "https://raw.githubusercontent.com/mattpocock/skills/main/CONTEXT.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/CONTEXT.md?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/blobs/a8b514c13b283c4ead4722f5e3589a3e48564ea3",
+      "html": "https://github.com/mattpocock/skills/blob/main/CONTEXT.md"
+    }
+  },
+  {
+    "name": "LICENSE",
+    "path": "LICENSE",
+    "sha": "f1dd2c09108dde1a5f56097cee8461b3ea834499",
+    "size": 1068,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/LICENSE?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/blob/main/LICENSE",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/blobs/f1dd2c09108dde1a5f56097cee8461b3ea834499",
+    "download_url": "https://raw.githubusercontent.com/mattpocock/skills/main/LICENSE",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/LICENSE?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/blobs/f1dd2c09108dde1a5f56097cee8461b3ea834499",
+      "html": "https://github.com/mattpocock/skills/blob/main/LICENSE"
+    }
+  },
+  {
+    "name": "README.md",
+    "path": "README.md",
+    "sha": "3b6952dfe0f306c2b58447e5b1124af9d8b49cc4",
+    "size": 15682,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/README.md?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/blob/main/README.md",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/blobs/3b6952dfe0f306c2b58447e5b1124af9d8b49cc4",
+    "download_url": "https://raw.githubusercontent.com/mattpocock/skills/main/README.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/README.md?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/blobs/3b6952dfe0f306c2b58447e5b1124af9d8b49cc4",
+      "html": "https://github.com/mattpocock/skills/blob/main/README.md"
+    }
+  },
+  {
+    "name": "docs",
+    "path": "docs",
+    "sha": "49036d4dce47cf7bd15a69d1c24ae7bb3274a96d",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/docs?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/docs",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/49036d4dce47cf7bd15a69d1c24ae7bb3274a96d",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/docs?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/49036d4dce47cf7bd15a69d1c24ae7bb3274a96d",
+      "html": "https://github.com/mattpocock/skills/tree/main/docs"
+    }
+  },
+  {
+    "name": "package-lock.json",
+    "path": "package-lock.json",
+    "sha": "db12f086c92da55b5d724f0dd3afecfebd2d793f",
+    "size": 49290,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/package-lock.json?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/blob/main/package-lock.json",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/blobs/db12f086c92da55b5d724f0dd3afecfebd2d793f",
+    "download_url": "https://raw.githubusercontent.com/mattpocock/skills/main/package-lock.json",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/package-lock.json?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/blobs/db12f086c92da55b5d724f0dd3afecfebd2d793f",
+      "html": "https://github.com/mattpocock/skills/blob/main/package-lock.json"
+    }
+  },
+  {
+    "name": "package.json",
+    "path": "package.json",
+    "sha": "2200fefca3d8c1ebac5a823681915eec736dfa07",
+    "size": 597,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/package.json?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/blob/main/package.json",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/blobs/2200fefca3d8c1ebac5a823681915eec736dfa07",
+    "download_url": "https://raw.githubusercontent.com/mattpocock/skills/main/package.json",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/package.json?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/blobs/2200fefca3d8c1ebac5a823681915eec736dfa07",
+      "html": "https://github.com/mattpocock/skills/blob/main/package.json"
+    }
+  },
+  {
+    "name": "scripts",
+    "path": "scripts",
+    "sha": "ce43f858b7f6ae6db0edb88e8bc2b64b77552e8b",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/scripts?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/scripts",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/ce43f858b7f6ae6db0edb88e8bc2b64b77552e8b",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/scripts?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/ce43f858b7f6ae6db0edb88e8bc2b64b77552e8b",
+      "html": "https://github.com/mattpocock/skills/tree/main/scripts"
+    }
+  },
+  {
+    "name": "skills",
+    "path": "skills",
+    "sha": "0e082b060e7d1f5e5f9e6b3be9418658920f5672",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/skills?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/skills",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/0e082b060e7d1f5e5f9e6b3be9418658920f5672",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/skills?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/0e082b060e7d1f5e5f9e6b3be9418658920f5672",
+      "html": "https://github.com/mattpocock/skills/tree/main/skills"
+    }
+  }
+]

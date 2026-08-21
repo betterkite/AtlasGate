@@ -1,0 +1,38 @@
+services:
+  atlasgate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: atlasgate:0.4.0
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      ATLASGATE_HOST: 0.0.0.0
+      ATLASGATE_PORT: 4310
+      ATLASGATE_DB_PATH: /data/atlasgate.db
+      ATLASGATE_PYTHON: python3
+    ports:
+      - "${ATLASGATE_PUBLISHED_PORT:-4310}:4310"
+    volumes:
+      - atlasgate-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4310/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  qdrant:
+    image: qdrant/qdrant:v1.15.4
+    profiles: ["semantic"]
+    restart: unless-stopped
+    volumes:
+      - qdrant-data:/qdrant/storage
+    ports:
+      - "${QDRANT_PUBLISHED_PORT:-6333}:6333"
+
+volumes:
+  atlasgate-data:
+  qdrant-data:

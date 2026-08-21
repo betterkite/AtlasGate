@@ -1,0 +1,15 @@
+.env
+data/*.db*
+node_modules/
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+coverage/
+npm-debug.log*
+docs/test-artifacts/
+
+# Generated wiki md mirror (source of truth is the SQLite database)
+knowledge/
+# Runtime artifacts
+data/server.log
+data/backups/

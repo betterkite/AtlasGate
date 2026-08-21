@@ -1,0 +1,82 @@
+[
+  {
+    "name": "deprecated",
+    "path": "skills/deprecated",
+    "sha": "4f5b3c15c5a232c67481af36ec0dc01582ea5612",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/skills/deprecated?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/skills/deprecated",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/4f5b3c15c5a232c67481af36ec0dc01582ea5612",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/skills/deprecated?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/4f5b3c15c5a232c67481af36ec0dc01582ea5612",
+      "html": "https://github.com/mattpocock/skills/tree/main/skills/deprecated"
+    }
+  },
+  {
+    "name": "engineering",
+    "path": "skills/engineering",
+    "sha": "9c2487f4a6df24ca8ee67f437e01ecefb26af4bf",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/skills/engineering?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/skills/engineering",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/9c2487f4a6df24ca8ee67f437e01ecefb26af4bf",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/skills/engineering?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/9c2487f4a6df24ca8ee67f437e01ecefb26af4bf",
+      "html": "https://github.com/mattpocock/skills/tree/main/skills/engineering"
+    }
+  },
+  {
+    "name": "in-progress",
+    "path": "skills/in-progress",
+    "sha": "b0d48764cfc4938d2eaeba8a9b3234b6b6361f3a",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/skills/in-progress?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/skills/in-progress",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/b0d48764cfc4938d2eaeba8a9b3234b6b6361f3a",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/skills/in-progress?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/b0d48764cfc4938d2eaeba8a9b3234b6b6361f3a",
+      "html": "https://github.com/mattpocock/skills/tree/main/skills/in-progress"
+    }
+  },
+  {
+    "name": "misc",
+    "path": "skills/misc",
+    "sha": "e27fe099d3f57e9828a5787818b570ab305304e5",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/skills/misc?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/skills/misc",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/e27fe099d3f57e9828a5787818b570ab305304e5",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/skills/misc?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/e27fe099d3f57e9828a5787818b570ab305304e5",
+      "html": "https://github.com/mattpocock/skills/tree/main/skills/misc"
+    }
+  },
+  {
+    "name": "productivity",
+    "path": "skills/productivity",
+    "sha": "3e328b067064bd5a69fd1aa7de3c331ec8fa978b",
+    "size": 0,
+    "url": "https://api.github.com/repos/mattpocock/skills/contents/skills/productivity?ref=main",
+    "html_url": "https://github.com/mattpocock/skills/tree/main/skills/productivity",
+    "git_url": "https://api.github.com/repos/mattpocock/skills/git/trees/3e328b067064bd5a69fd1aa7de3c331ec8fa978b",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mattpocock/skills/contents/skills/productivity?ref=main",
+      "git": "https://api.github.com/repos/mattpocock/skills/git/trees/3e328b067064bd5a69fd1aa7de3c331ec8fa978b",
+      "html": "https://github.com/mattpocock/skills/tree/main/skills/productivity"
+    }
+  }
+]

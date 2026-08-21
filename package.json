@@ -1,0 +1,19 @@
+{
+  "name": "atlasgate",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "description": "Governed LLM gateway and versioned knowledge agent platform",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test:node": "node --test",
+    "test:python": "python -m unittest discover -s python/tests -v",
+    "test": "node --test && python -m unittest discover -s python/tests -v",
+    "test:performance": "node --test test/performance.bench.js",
+    "check": "node --check src/server.js && node --check web/app.js && node --test && python -m unittest discover -s python/tests -v"
+  }
+}

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>AtlasGate Console</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">A</span>
+        <span><strong>AtlasGate</strong><small>Agent Infrastructure</small></span>
+      </div>
+      <nav aria-label="主导航">
+        <button class="nav-item active" data-view="overview"><span>01</span>运行总览</button>
+        <button class="nav-item" data-view="agent"><span>02</span>知识 Agent</button>
+        <button class="nav-item" data-view="knowledge"><span>03</span>知识版本</button>
+        <button class="nav-item" data-view="gateway"><span>04</span>模型网关</button>
+        <button class="nav-item" data-view="routing"><span>05</span>路由策略</button>
+        <button class="nav-item" data-view="skills"><span>06</span>Skills 与 Memory</button>
+        <button class="nav-item" data-view="audit"><span>07</span>审计证据</button>
+        <button class="nav-item" data-view="wiki"><span>08</span>Wiki 知识库</button>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="status-dot"></span>
+        <span><strong>Local</strong><small id="service-status">连接中</small></span>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="page-eyebrow">CONTROL PLANE</p>
+          <h1 id="page-title">运行总览</h1>
+        </div>
+        <div class="top-actions">
+          <span class="environment">DEV / LOCAL</span>
+          <span class="admin-identity" id="admin-identity"></span>
+          <button class="button secondary compact-button" id="account-settings" type="button" hidden>账户</button>
+          <button class="button secondary compact-button" id="logout" type="button">退出</button>
+          <button class="icon-button" id="refresh" title="刷新当前视图" aria-label="刷新">↻</button>
+        </div>
+      </header>
+      <div id="app" class="content" aria-live="polite">
+        <div class="loading">正在读取运行状态...</div>
+      </div>
+    </main>
+  </div>
+  <div id="toast" role="status"></div>
+  <div class="auth-gate" id="auth-gate" hidden>
+    <form class="auth-card" id="login-form">
+      <div class="brand auth-brand"><span class="brand-mark">A</span><div><strong>AtlasGate Console</strong><small>管理员登录</small></div></div>
+      <div class="auth-copy"><h1>登录控制台</h1><p>控制台账号用于管理 Provider、路由、知识库和客户端密钥。客户端 API Key 不能用于此处登录。</p></div>
+      <div class="field"><label for="login-username">账号</label><input id="login-username" autocomplete="username" required></div>
+      <div class="field"><label for="login-password">密码</label><input id="login-password" type="password" autocomplete="current-password" required></div>
+      <div class="auth-error" id="login-error" role="alert"></div>
+      <button class="button primary auth-submit" type="submit">登录</button>
+      <small class="auth-hint">请使用部署时配置的管理员账号。开发环境默认值见配置文档，生产环境请务必修改。</small>
+    </form>
+  </div>
+  <dialog class="modal account-modal" id="account-dialog">
+    <form method="dialog" class="modal-card" id="password-form">
+      <div class="modal-header"><div><h2>修改管理员密码</h2><p>修改后其他已登录会话会失效，当前会话保持有效</p></div><button class="icon-button" type="button" data-account-close aria-label="关闭">×</button></div>
+      <div class="modal-body stack">
+        <div class="field"><label for="current-password">当前密码</label><input id="current-password" type="password" autocomplete="current-password" required></div>
+        <div class="field"><label for="new-password">新密码（至少 12 个字符）</label><input id="new-password" type="password" autocomplete="new-password" minlength="12" required></div>
+        <div class="field"><label for="confirm-password">确认新密码</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="12" required></div>
+        <div class="auth-error" id="password-error" role="alert"></div>
+      </div>
+      <div class="modal-actions"><button class="button secondary" type="button" data-account-close>取消</button><button class="button primary" value="default">保存新密码</button></div>
+    </form>
+  </dialog>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
