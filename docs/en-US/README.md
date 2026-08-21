@@ -4,44 +4,58 @@ This directory contains the English edition of the project documentation. The Ch
 
 [Chinese documentation](../zh-CN/README.md)
 
-## Getting started
+Choose an entry point by reader role:
 
-- [Project overview](../../README.md)
-- [Runtime data directory](../../data/README.en-US.md)
-- [Getting started](GETTING_STARTED.md)
-- [Introduction](INTRODUCTION.md)
-- [Usage](USAGE.md)
+> Current baseline: **version 0.4.0**, tests **Node 92 / Python 19**, zero npm runtime dependencies; default port **4310**, console `admin / atlasgate-admin`, gateway key `atlasgate-dev-key` (Bearer header). All examples are based on this baseline and can be reproduced as-is.
 
-## Product capabilities
+## 🚀 Newcomers / reproduction
 
-- [Gateway](GATEWAY.md)
-- [Knowledge versioning](KNOWLEDGE.md)
-- [LLM Wiki](WIKI.md)
-- [Knowledge Agent](AGENT.md)
+- [Project overview](../../README.md) — positioning, capability overview, one-minute startup
+- [Getting started (reproduce from scratch)](GETTING_STARTED.md) — environment requirements + verified command checklist, follow it and it works
+- [Introduction](INTRODUCTION.md) — positioning, design philosophy, three-layer model, the two key types, glossary
 
-## Development and operations
+## 🧭 Users (console and module usage)
 
-- [Architecture](ARCHITECTURE.md)
-- [API reference](API.md)
-- [Configuration](CONFIGURATION.md)
-- [Deployment](DEPLOYMENT.md)
-- [Console operations](CONSOLE_OPS.md)
-- [Operations](OPERATIONS.md)
+- [Usage](USAGE.md) — tour of the 8 console views + common task flows
+- [Gateway](GATEWAY.md) — Provider / routing / client keys / upstream balances / rate limits
+- [Knowledge versioning](KNOWLEDGE.md) — import / Change / merge / conflicts / retrieval / audit attribution
+- [LLM Wiki](WIKI.md) — **where the md files live** / compilation pipeline / review / graph / sync and export
+- [Knowledge Agent](AGENT.md) — ask / citations / query sedimentation (ADR-015) / Memory / Skills retrieval strategy
+
+### Common reproduction prerequisites (shared by all examples)
+
+Admin APIs require logging in once and saving the session; the gateway `/v1/*` uses a Bearer key. These two lines are the prerequisite for every example:
+
+```bash
+# Health check (returns version: 0.4.0 plus python pool and retrieval backend status)
+curl http://127.0.0.1:4310/health
+
+# Admin login, save the session (default admin / atlasgate-admin)
+curl -c cookies.txt -X POST http://127.0.0.1:4310/api/auth/login \
+  -H 'content-type: application/json' -d '{"username":"admin","password":"atlasgate-admin"}'
+
+# Gateway verification (local mock, works offline)
+curl http://127.0.0.1:4310/v1/chat/completions \
+  -H "Authorization: Bearer atlasgate-dev-key" -H 'content-type: application/json' \
+  -d '{"model":"auto","messages":[{"role":"user","content":"ping"}]}'
+```
+
+## 🔧 Developers / operations
+
+- [Architecture](ARCHITECTURE.md) — modules, data model, compilation pipeline, graph
+- [Developer feature guides](guides/README.md) — per-feature-block purpose, code, principles, data, boundaries, and tests
+- [Feature matrix](guides/FEATURE_MATRIX.md) — features, code, APIs, tests, and implementation status
+- [Karpathy alignment](guides/07-karpathy-alignment.md) — conformance and differences of the current implementation vs. the original methodology
+- [API](API.md) — full HTTP / MCP endpoint set
+- [Configuration](CONFIGURATION.md) — all environment variables
+- [Deployment](DEPLOYMENT.md) — Docker / Compose / persistence
+- [Operations](CONSOLE_OPS.md) — backup / upgrade / troubleshooting
 - [Security](SECURITY.md)
-- [Architecture decisions](DECISIONS.md)
+- [Architecture decisions (ADR)](DECISIONS.md) — includes ADR-015 memory × knowledge × graph × skills retrieval
 - [Roadmap](ROADMAP.md)
-- [Reference capability matrix](REFERENCE_MATRIX.md)
-- [Test plan](TEST_PLAN.md)
-- [Test report](TEST_REPORT.md)
 
-## Developer feature guides
+## 📚 References and history
 
-The feature guides connect user intent, runtime entry points, services, algorithms, data, invariants, failure behavior, and tests.
-
-- [Guide index](guides/README.md)
-- [Feature matrix](guides/FEATURE_MATRIX.md)
-- [Karpathy alignment](guides/07-karpathy-alignment.md)
-
-## Reference policy
-
-Files under `docs/references/` are copied source material or external project references. Files under `docs/archive/` are historical implementation records. They retain their original language and are intentionally excluded from the bilingual product documentation set.
+- [references/](../references/) — archived copies of Karpathy's LLM Wiki original text and reference projects (llm-wiki-skill, llm_wiki)
+- [archive/](../archive/) — historical implementation documents (LLM Wiki refactor Phase 0-4 records)
+- [Test plan](TEST_PLAN.md) / [Test report](TEST_REPORT.md)
