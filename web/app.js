@@ -6,6 +6,7 @@ let lastBalanceAutoRefresh = 0;
 const state = {
   view: "overview",
   kbId: "",
+  wikiTreeScroll: 0,
   messages: [],
   evidence: [],
   useMemory: false,
@@ -128,6 +129,9 @@ function navigate(view) {
 async function render() {
   const app = document.querySelector("#app");
   const previousScroll = window.scrollY;
+  // Capture view-scoped scroll containers BEFORE render clears the DOM —
+  // renderWiki's own capture would run after app.innerHTML is wiped.
+  state.wikiTreeScroll = state.view === "wiki" ? (document.querySelector(".wiki-tree")?.scrollTop ?? 0) : 0;
   app.innerHTML = '<div class="loading">正在读取运行状态...</div>';
   try {
     await ({
@@ -1573,9 +1577,9 @@ const COMMUNITY_PALETTE = ["#087f6d", "#3f6f93", "#c28b16", "#8a5a9e", "#c25b4e"
 
 async function renderWiki(app) {
   // The page tree is its own scroll container (max-height 78vh, overflow auto);
-  // keep its scrollTop across re-renders so clicking a page doesn't jump to top.
-  const oldTree = document.querySelector(".wiki-tree");
-  const treeScroll = oldTree ? oldTree.scrollTop : 0;
+  // render() captured state.wikiTreeScroll before wiping the DOM — restore it
+  // after re-render so clicking a page doesn't jump the tree back to top.
+  const treeScroll = state.wikiTreeScroll ?? 0;
   const kbs = await api("/api/knowledge-bases");
   if (!state.kbId || !kbs.some((kb) => kb.id === state.kbId)) state.kbId = kbs[0]?.id ?? "";
   const selected = kbs.find((kb) => kb.id === state.kbId);
