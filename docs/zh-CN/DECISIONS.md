@@ -6,7 +6,7 @@
 | ADR-002 | SQLite WAL | 提供事务、外键和便携的 Docker 持久化卷 |
 | ADR-003 | 稳定 Master 加隔离 Change | 保证原子发布、审计和冲突证据 |
 | ADR-004 | 常驻 Python worker pool | 保留进程隔离，同时避免每个请求重复启动 Python |
-| ADR-005 | 明确命名的检索模式 | 区分确定性的本地向量和真实语义 Embedding |
+| ADR-005 | 明确命名的检索模式 | hybrid 默认：词法 + 本地稠密向量 RRF，无 embedding 自动降级纯词法，qdrant 可选后端 |
 | ADR-006 | 上传式 Skill 包 | 支持可移植内容包，但不执行客户端压缩包 |
 | ADR-007 | 诚实声明兼容能力 | 测试协议兼容性，但不宣称与商业托管产品完全一致 |
 | ADR-008 | LLM Wiki 三层模型 | Raw Sources → Wiki → Schema，并对系统页做版本治理 |
@@ -22,11 +22,79 @@
 
 grilling Q1~Q8 三方向决策。
 
-**A. 问答自动沉淀（记忆 → 知识闭环）**：当问题被问过 ≥3 次（对 `agent_runs` 历史问题做词法+向量相似统计）或用户显式请求（`save_to_wiki` / `sediment`），且回答满足"高质量"规则（引用 ≥2 个来源、无"证据不足"标记、有实质内容）时，问答沉淀进 Wiki。归类为智能（Q4C）：先用混合 RRF 把问题匹配到已有 `concepts/`/`entities/` 页面——强匹配则创建/更新 `queries/<slug>.md` 并 `[[wikilink]]` 该页面（关联而非改写人工维护的概念页）；否则落 `queries/`。沉淀走标准 Change 审计链、跟随 KB `ingest_mode`（Q5A）；同主题沉淀页已存在则原地更新（Q6A）；沉淀页是普通 wiki 页——可编辑、可删除、可回滚（墓碑）。
+**A. 问答自动沉淀（记忆 → 知识闭环）**：当问题被问过 ≥3 次（对 `agent_runs` 近 30 天历史问题做 bigram Jaccard ≥0.3 相似统计）或用户显式请求（`save_to_wiki` / `sediment`），且回答满足"高质量"规则（引用 ≥2 个来源、无"证据不足"标记、内容 ≥80 字）时，问答沉淀进 Wiki。归类为智能（Q4C）：先用混合 RRF 把问题匹配到已有 `concepts/`/`entities/` 页面——强匹配（score ≥0.2）则创建/更新 `queries/<slug>.md` 并 `[[wikilink]]` 该页面（关联而非改写人工维护的概念页）；否则落 `queries/`。沉淀走标准 Change 审计链、跟随 KB `ingest_mode`（Q5A）；同主题沉淀页已存在则原地更新（Q6A）；沉淀页是普通 wiki 页——可编辑、可删除、可回滚（墓碑）。
 
 **B. 记忆成为图谱的一部分（使用痕迹）**：知识页面节点带 `query_hits` 引用热度（近 30 天窗口，Q8A），图谱 API 返回热度供控制台按引用频率着色（Q7B）——记忆是知识的使用痕迹，不额外建 memory 节点。
 
 **C. 技能 × 检索策略**：SKILL.md frontmatter 增加结构化 `retrieval` 字段（`multihop` / `top_k` / `include_raw` / `directories`，或预设别名）；激活的技能把检索参数注入 Agent 请求（Q3A），技能从"纯 prompt 文本"变为可影响检索策略。
 
 每个决策都必须说明生产边界。后续变更应新增 ADR，或同步补充受影响决策的迁移和测试影响。
+
+## 可复现示例（对应本页决策）
+
+管理端 API 先登录保存会话（`curl -c cookies.txt`），后续用 `-b cookies.txt` 调用；网关 `/v1/*` 用 `Authorization: Bearer atlasgate-dev-key`。以下命令在默认开发配置（端口 4310、默认凭据）下实测通过，`$KB` 承接建库返回的 id。
+
+### ADR-003/008/009：Change → merge → 不可变 Master
+
+```bash
+curl -c cookies.txt -X POST http://127.0.0.1:4310/api/auth/login \
+  -H 'content-type: application/json' -d '{"username":"admin","password":"atlasgate-admin"}'
+
+KB=$(curl -b cookies.txt -X POST http://127.0.0.1:4310/api/knowledge-bases \
+  -H 'content-type: application/json' -d '{"name":"示例库","ingest_mode":"review"}' \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+
+# 提交一个 upsert Change（review 库下留 pending）
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/knowledge-bases/$KB/changes" \
+  -H 'content-type: application/json' \
+  -d '{"path":"notes/hello.md","operation":"upsert","content":"# Hello\n\nAtlasGate 示例页。","author":"tester"}'
+
+# merge 发布 → Master v2；Change 列表仍可审计
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/knowledge-bases/$KB/merge" \
+  -H 'content-type: application/json' -d '{"summary":"发布示例页"}'
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/changes"
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/versions"
+```
+
+### ADR-015 A：问答沉淀闭环（显式请求，review 库留 pending）
+
+```bash
+curl -b cookies.txt -X POST http://127.0.0.1:4310/api/agents/knowledge/ask \
+  -H 'content-type: application/json' \
+  -d "{\"kb_id\":\"$KB\",\"question\":\"AtlasGate 是什么\",\"save_to_wiki\":true}"
+# 响应含 saved_to_wiki（queries/<slug>.md 沉淀为 pending Change，跟随 ingest_mode）
+
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/pages?page_type=query"
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/graph" \
+  | python3 -m json.tool | grep -E '"(path|query_hits|community)"' | head
+```
+
+### ADR-015 C：技能声明检索策略并 attach
+
+```bash
+SKILL=$(curl -b cookies.txt -X POST http://127.0.0.1:4310/api/skills \
+  -H 'content-type: application/json' \
+  -d '{"name":"deep-8","description":"深取8页","instructions":"按证据回答","retrieval":{"top_k":8,"multihop":true}}' \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/agents/knowledge-agent/skills/$SKILL" \
+  -H 'content-type: application/json' -d '{"attached":true}'
+# attach 后提问：multihop 开启、top_k=8；调用方显式参数优先
+curl -b cookies.txt -X POST http://127.0.0.1:4310/api/agents/knowledge/ask \
+  -H 'content-type: application/json' \
+  -d "{\"kb_id\":\"$KB\",\"question\":\"AtlasGate 是什么\",\"top_k\":3}"
+```
+
+### ADR-012/013/014：混合检索 + 多跳 + 证据约束
+
+```bash
+# hybrid 检索（词法 + 向量 RRF）
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/knowledge-bases/$KB/search" \
+  -H 'content-type: application/json' -d '{"query":"石壁 线索","top_k":5}'
+
+# 多跳提问：跨页拼答案；证据不足时回答明说"当前知识库证据不足"
+curl -b cookies.txt -X POST http://127.0.0.1:4310/api/agents/knowledge/ask \
+  -H 'content-type: application/json' \
+  -d "{\"kb_id\":\"$KB\",\"question\":\"跨页问题：A 页的线索与 B 页的人物有什么关系\",\"multihop\":true}"
+# 响应 retrieval_mode=hybrid；rewritten_question 在零证据改写后非空
+```
 

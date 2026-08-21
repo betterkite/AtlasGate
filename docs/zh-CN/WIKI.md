@@ -16,6 +16,21 @@ AtlasGate 的知识库页面**存在 SQLite 数据库**（`data/atlasgate.db` �
 - 关闭镜像：`ATLASGATE_WIKI_SYNC_DIR=""`；换目录：`ATLASGATE_WIKI_SYNC_DIR=/path/to/vault`。
 - 想用 git 管 wiki：目录默认 gitignore，可 `git add -f knowledge/`。
 
+**照抄可跑**：同步 md 镜像与导出 zip（管理端 `/api/*` 用 cookie 会话，`$KB` 沿用第 4 节示例建库返回的 id）：
+
+```bash
+# 手动触发同步（每次 merge 发布已自动同步；此命令用于手动补同步，返回 files/removed 统计）
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/knowledge-bases/$KB/sync" \
+  -H 'content-type: application/json' -d '{}'
+
+# 镜像目录：knowledge/<库名slug>/（含 .obsidian/ 配置与 .atlasgate-manifest.json 删除跟踪）
+ls knowledge/wiki-demo/
+
+# 导出 Master 快照 zip（含 frontmatter；解压后用 Obsidian 直接打开）
+curl -b cookies.txt -o wiki.zip "http://127.0.0.1:4310/api/knowledge-bases/$KB/export"
+unzip -l wiki.zip | head
+```
+
 ## 2. 三层模型（Karpathy 方法论）
 
 ```
@@ -59,6 +74,48 @@ Schema（公约与目的）→ schema.md / purpose.md（可编辑，修改走 Ch
 - **去重**：相同内容跳过（`ingest_cache`）。**同一内容再次上传会提示"重复内容跳过"**——如果之前那次编译失败或你想重新编译，勾选摄入表单的「强制重新摄入」或在 API 传 `force:true` 即可绕过去重重新入队。
 - **失败重试**：队列失败自动重试 ≤2 次，崩溃重启恢复。
 
+**照抄可跑**（默认开发配置 `npm start`，控制台 http://127.0.0.1:4310，admin / atlasgate-admin）：粘贴摄入 → 看队列/页面 → 强制重摄入 → 发布：
+
+```bash
+# 1) 登录（管理端 API 用 cookie 会话）
+curl -c cookies.txt -X POST http://127.0.0.1:4310/api/auth/login \
+  -H 'content-type: application/json' -d '{"username":"admin","password":"atlasgate-admin"}'
+
+# 2) 建库（ingest_mode=review：编译产物留 pending 等人工审阅；库名用 ASCII，避免导出 zip 文件名带中文报 500）
+KB=$(curl -b cookies.txt -X POST http://127.0.0.1:4310/api/knowledge-bases \
+  -H 'content-type: application/json' -d '{"name":"wiki-demo","ingest_mode":"review"}' \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+echo "KB=$KB"
+
+# 3) 粘贴素材 → 入队（HTTP 202；相同内容再投返回 skipped:true / reason:duplicate_content）
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/knowledge-bases/$KB/ingest" \
+  -H 'content-type: application/json' \
+  -d '{"kind":"paste","filename":"素材.md","text":"向顶天在枯井底发现半块石壁，刻着脱锚术的副作用：灵气反噬。"}'
+
+# 4) 摄入队列：pending → running → done（同库串行，失败自动重试 ≤2 次）
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/ingest-queue?limit=5" \
+  | python3 -m json.tool
+
+# 5) 看页面：review 模式下列出的是 Master 页面（系统页）；两步编译产物是 pending Change，
+#    在 /changes 可见（真实模型 → entities//concepts/ 编译页；只有 mock → sources/素材.md 降级页），
+#    合并发布后才出现在 /pages
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/pages" \
+  | python3 -c 'import json,sys; [print(p["path"], p["page_type"]) for p in json.load(sys.stdin)]'
+
+# 5b) 编译产物批次：共享 batch_id、author=wiki-compiler（含 index/log/overview 系统页更新）
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/changes" \
+  | python3 -c 'import json,sys; [print(c["path"], c["batch_id"], c["author"]) for c in json.load(sys.stdin) if c["status"]=="pending"]'
+
+# 6) 强制重新摄入：force:true 绕过 SHA256 去重重新入队（上次编译失败/想重编译时用）
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/knowledge-bases/$KB/ingest" \
+  -H 'content-type: application/json' \
+  -d '{"kind":"paste","filename":"素材.md","text":"向顶天在枯井底发现半块石壁，刻着脱锚术的副作用：灵气反噬。","force":true}'
+
+# 7) review 库手动发布（auto 库满足 merge_batch_size/间隔自动合并）；发布后自动跑结构级 Lint 并同步 md 镜像
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/knowledge-bases/$KB/merge" \
+  -H 'content-type: application/json' -d '{"summary":"发布 Wiki 编译产物"}'
+```
+
 ## 5. 检索（Hybrid：词法 + 本地向量，RRF 融合）
 
 知识 Agent 查询默认走 **Hybrid 页面级检索**（`retrieval_mode="hybrid"`，RAG_PLAN.md / ADR-012）：
@@ -93,6 +150,17 @@ question
 - **力导向布局**：节点按链接数 √ 缩放，社区着色，related 边按权重变色加粗。
 - **交互**：拖单个节点（位置记忆）/ 拖空白平移 / 滚轮缩放 / 悬停预览卡（名称/路径/类型/度数/社区）/ 点击选中详情（Wiki 视图可"打开页面"）/ 搜索框定位 / 小地图 / 适应按钮 / 标题节点开关。
 
+**照抄可跑**（图谱数据 + 引用热度，`$KB` 沿用第 4 节示例）：
+
+```bash
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/graph" \
+  | python3 -c 'import json,sys; d=json.load(sys.stdin); \
+print("nodes:", len(d["nodes"]), "edges:", len(d["edges"])); \
+print("communities:", [(c["id"], c["members"], c["cohesion"]) for c in d["communities"]]); \
+print("insights:", {k: len(v) for k, v in d["insights"].items()}); \
+print("query_hits:", [(n["document_path"], n["query_hits"]) for n in d["nodes"] if n["kind"]=="document" and n["query_hits"]>0])'
+```
+
 ## 8. Lint 体检
 
 - 结构级（孤立页/断链/index 一致性）纯 SQL、免费，**每次发布自动跑**；LLM 级（矛盾/过时/数据缺口）需真实模型，手动触发。
@@ -103,6 +171,25 @@ question
 知识 Agent 回答时勾选「回存 Wiki」（或 API `save_to_wiki:true` / `sediment:true`）显式沉淀；**或自动触发**：同一/相似问题被问过 ≥3 次且回答满足质量规则（引用 ≥2 个来源、无"证据不足"、有实质内容）时自动沉淀。产物为 `queries/<slug>.md`（含 `sources[]` 溯源 + `[[wikilink]]` 智能关联到匹配的概念/实体页），走标准 Change 审计链（review 留 pending、auto 直接发布），**可编辑、可删除、可回滚**。开关：`ATLASGATE_QUERY_SEDIMENT_ENABLED`（默认开）。
 
 **引用热度（记忆即使用痕迹）**：每次 Agent 回答引用的页面都会累计 `query_hits`（近 30 天窗口），图谱节点与悬停卡显示"问答引用 N 次"，供识别高频使用的知识页。
+
+**照抄可跑**（显式沉淀 + 引用热度，`$KB` 沿用第 4 节示例）：
+
+```bash
+# 提问并显式回存：响应含 saved_to_wiki（沉淀为 queries/<slug>.md，review 库留 pending 走审计链）
+curl -b cookies.txt -X POST http://127.0.0.1:4310/api/agents/knowledge/ask \
+  -H 'content-type: application/json' \
+  -d "{\"kb_id\":\"$KB\",\"question\":\"脱锚术的副作用是什么\",\"save_to_wiki\":true}"
+
+# 同 slug 的 pending change 会被原地更新，不堆积重复（Q6A）
+curl -b cookies.txt -X POST http://127.0.0.1:4310/api/agents/knowledge/ask \
+  -H 'content-type: application/json' \
+  -d "{\"kb_id\":\"$KB\",\"question\":\"脱锚术的副作用是什么\",\"save_to_wiki\":true}"
+
+# 引用热度：回答引用的页面 query_hits 累计（30 天窗口），图谱节点可见
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/graph" \
+  | python3 -c 'import json,sys; d=json.load(sys.stdin); \
+print([(n["document_path"], n["query_hits"]) for n in d["nodes"] if n["kind"]=="document" and n["query_hits"]>0])'
+```
 
 ## 10. 相关文档
 

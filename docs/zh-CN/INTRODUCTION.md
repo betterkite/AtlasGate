@@ -17,7 +17,7 @@
                               ├─ 鉴权（客户端密钥）→ 限流/预算 → 能力过滤 → 评分路由 → 上游 Provider（DeepSeek 等）
                               └─ 每次调用记录：请求、路由、用量、密钥归属、风险（审计账本）
 ② 知识库（版本化 + LLM Wiki）
-    导入素材 → Change（待审）→ 合并发布 → 不可变 Master vN → 检索 chunk + 关系图谱
+    导入素材 → Change（待审）→ 合并发布 → 不可变 Master vN → 检索索引（词法 bigram + 稠密向量 RRF）+ 关系图谱
     LLM 编译管线：两步（分析→生成）自动把素材变成 实体页/概念页/摘要页/索引/日志
     Wiki 页面同时镜像到磁盘 knowledge/ 目录（Obsidian 可直接打开）
 ③ 知识 Agent（Python 常驻 worker）
@@ -36,9 +36,76 @@
 
 ## 关键数字
 
-- 全量测试：**Node 71+ / Python 13**（`npm test` 门禁）
-- 技术栈：Node.js 24（ESM、`node:sqlite`）+ Python 3.11+（Agent Core）+ 原生 HTML/Canvas 控制台
+- 版本：**0.4.0**
+- 全量测试：**Node 92 / Python 19**（`npm test` 门禁，全绿）
+- 技术栈：Node.js 24（ESM、`node:sqlite`，零 npm 运行依赖）+ Python 3.11+（Agent Core）+ 原生 HTML/Canvas 控制台
 - 部署形态：单机模块化单体（Docker 可选），数据在 `data/atlasgate.db`（WAL）
+- 默认入口：`npm start` → 控制台 http://127.0.0.1:4310，默认账号 `admin / atlasgate-admin`，网关 Key `atlasgate-dev-key`（Bearer 头）
+
+## 术语表
+
+| 术语 | 含义 |
+| --- | --- |
+| 网关（Gateway） | `/v1/*` 多协议入口（Chat Completions / Responses / Anthropic Messages / Embeddings / SSE），负责鉴权、限流、评分路由与审计账本 |
+| 知识库（KB） | 版本化 Wiki 页面集合，页面本体存于 SQLite `data/atlasgate.db`，每库独立 `ingest_mode` 与图谱 |
+| Change | 一次待审修改（upsert / delete），携带作者与 `base_version`，经 merge 才影响生产读取指针 |
+| Master | 不可变生产版本（vN）；merge 时原子推进，冲突账本 / tombstone 一并落库 |
+| 系统页 | `index.md` / `log.md` / `overview.md` 由编译管线维护，`purpose.md` / `schema.md` 人工协同；均参与版本治理 |
+| 降级页 | 无真实模型时摄入退化为"素材存档 + 原文成页"，带 `atlasgate-degraded` 标记，默认不参与检索（`include_raw=true` 才可见） |
+| 检索模式 | `hybrid`（默认）：词法 bigram 页面级 + 本地稠密页面向量按 RRF 融合；无 embedding 自动降级纯词法；`qdrant` 为可选纯向量后端 |
+| RRF | 倒数排名融合：`score(p) = Σ 1/(60 + rank)`，零权重调参地融合词法与向量两路命中 |
+| 伪重排 | 用图谱度数打破 RRF 并列、提升中心页面（零额外依赖，阶段 2） |
+| 查询改写 | 首轮零证据时用真实 LLM 改写问题并重试一次（`ATLASGATE_QUERY_REWRITE_ENABLED`，默认开） |
+| 多跳 | 首轮命中页的 `[[wikilink]]` 目标并入候选再排一轮，零额外 LLM 调用（阶段 3） |
+| 证据充分性 | 证据不足时回答明说"当前知识库证据不足"，不编造（阶段 3） |
+| `query_hits` | 页面被问答引用的热度（近 30 天窗口），图谱节点可见，控制台按引用频率着色 |
+| 沉淀（Sediment） | 问答写入 `queries/<slug>.md` 并走 Change 审计链：显式 `save_to_wiki` / `sediment`，或相似问题 ≥3 次 + 质量规则（ADR-015） |
+| 技能（Skill） | SKILL.md 包，frontmatter 可声明 `retrieval` 字段（`top_k` / `multihop` / `include_raw` / `directories`），attach 后注入检索参数（ADR-015） |
+| ADR | 架构决策记录（001~015），本仓库重要技术决策的权威说明 |
+| MCP | Model Context Protocol 工具入口（`POST /mcp`），把知识库检索 / 提问暴露给外部 Agent |
+
+## 一次提问的完整数据流（可复现）
+
+以「建库 → 导入素材 → 发布 → 提问 → 沉淀」串起三大组件（管理端 API 先登录保存会话，网关端用 Bearer Key）：
+
+```bash
+# ① 登录管理端（保存会话 cookie）
+curl -c cookies.txt -X POST http://127.0.0.1:4310/api/auth/login \
+  -H 'content-type: application/json' -d '{"username":"admin","password":"atlasgate-admin"}'
+
+# ② 建库（review 模式，默认；返回库 id 承接给 $KB）
+KB=$(curl -b cookies.txt -X POST http://127.0.0.1:4310/api/knowledge-bases \
+  -H 'content-type: application/json' -d '{"name":"示例库","ingest_mode":"review"}' \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+echo "KB=$KB"
+
+# ③ 导入素材 → 生成 pending Change（知识平台）
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/knowledge-bases/$KB/import" \
+  -H 'content-type: application/json' \
+  -d '{"filename":"入门.md","media_type":"text/markdown","data_base64":"IyBBdGxhc0dhdGUg5YWl6ZeoCgpBdGxhc0dhdGUg5piv6Z2i5ZCR5bCP5Z6L5Zui6Zif55qE5pys5ZywIExNTSDln7rnoYDorr7mlr3vvJrlpJrljY/orq7nvZHlhbMgKyDniYjmnKzljJYgTExNIFdpa2kgKyDnn6Xor4YgQWdlbnTjgIIK","author":"tester"}'
+
+# ④ merge 发布 → 不可变 Master v2（版本治理）
+curl -b cookies.txt -X POST "http://127.0.0.1:4310/api/knowledge-bases/$KB/merge" \
+  -H 'content-type: application/json' -d '{"summary":"首次发布"}'
+
+# ⑤ 知识 Agent 提问（显式沉淀；响应含 answer / sources / retrieval_mode / saved_to_wiki）
+curl -b cookies.txt -X POST http://127.0.0.1:4310/api/agents/knowledge/ask \
+  -H 'content-type: application/json' \
+  -d "{\"kb_id\":\"$KB\",\"question\":\"AtlasGate 是什么\",\"save_to_wiki\":true}"
+
+# ⑥ 沉淀产物：queries/ 页成为 pending Change（review 库不自动发布），图谱记录引用热度
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/changes"
+curl -b cookies.txt "http://127.0.0.1:4310/api/knowledge-bases/$KB/graph" \
+  | python3 -m json.tool | grep -E '"(path|query_hits|community)"' | head
+```
+
+网关侧等价调用（Bearer Key，无需登录）：
+
+```bash
+curl http://127.0.0.1:4310/v1/chat/completions \
+  -H "Authorization: Bearer atlasgate-dev-key" -H 'content-type: application/json' \
+  -d '{"model":"auto","messages":[{"role":"user","content":"ping"}]}'
+```
 
 ## 参考来源
 

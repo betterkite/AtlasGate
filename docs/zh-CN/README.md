@@ -4,6 +4,8 @@
 
 按读者角色选择入口：
 
+> 当前基线：**版本 0.4.0**，测试 **Node 92 / Python 19**，零 npm 运行依赖；默认端口 **4310**，控制台 `admin / atlasgate-admin`，网关 key `atlasgate-dev-key`（Bearer 头）。所有示例都基于这个基线，照抄即可复现。
+
 ## 🚀 新手 / 复现
 - [中文项目说明](../../README.md) — 项目定位、能力总览、一分钟启动
 - [Getting Started（从零复现）](GETTING_STARTED.md) — 环境要求 + 实测命令 checklist，照做即通
@@ -14,7 +16,25 @@
 - [Gateway（模型网关）](GATEWAY.md) — Provider / 路由 / 客户端密钥 / 上游余额 / 限流
 - [Knowledge（知识版本）](KNOWLEDGE.md) — 导入 / Change / 合并 / 冲突 / 检索 / 审计归属
 - [Wiki（LLM Wiki 知识库）](WIKI.md) — **md 文件在哪** / 编译管线 / 审阅 / 图谱 / 同步与导出
-- [Agent（知识 Agent）](AGENT.md) — 提问 / 引用 / 回存 / Memory / Skills
+- [Agent（知识 Agent）](AGENT.md) — 提问 / 引用 / 问答沉淀（ADR-015）/ Memory / Skills 检索策略
+
+### 通用复现前置（所有示例共用）
+
+管理端 API 需要先登录一次并保存会话，后续用 `-b cookies.txt` 携带；网关 `/v1/*` 用 Bearer key。以下两条是所有示例的前提：
+
+```bash
+# 健康检查（返回 version: 0.4.0 与 python pool、检索后端状态）
+curl http://127.0.0.1:4310/health
+
+# 管理端登录，保存会话（默认 admin / atlasgate-admin）
+curl -c cookies.txt -X POST http://127.0.0.1:4310/api/auth/login \
+  -H 'content-type: application/json' -d '{"username":"admin","password":"atlasgate-admin"}'
+
+# 网关端验证（本地 mock，离线可跑）
+curl http://127.0.0.1:4310/v1/chat/completions \
+  -H "Authorization: Bearer atlasgate-dev-key" -H 'content-type: application/json' \
+  -d '{"model":"auto","messages":[{"role":"user","content":"ping"}]}'
+```
 
 ## 🔧 开发者 / 运维
 - [Architecture（架构）](ARCHITECTURE.md) — 模块、数据模型、编译管线、图谱
@@ -26,7 +46,7 @@
 - [Deployment（部署）](DEPLOYMENT.md) — Docker / Compose / 持久化
 - [Operations（运维手册）](CONSOLE_OPS.md) — 备份 / 升级 / 故障排查
 - [Security（安全）](SECURITY.md)
-- [Decisions（架构决策 ADR）](DECISIONS.md)
+- [Decisions（架构决策 ADR）](DECISIONS.md) — 含 ADR-015 记忆 × 知识 × 图谱 × 技能检索
 - [Roadmap（路线图）](ROADMAP.md)
 
 ## 📚 参考与历史
