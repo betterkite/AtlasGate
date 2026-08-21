@@ -22,10 +22,12 @@ export class AgentService {
     const skillId = id("skl");
     const version = input.version ?? "1.0.0";
     const timestamp = now();
+    // ADR-015 (C): structured retrieval strategy from SKILL.md frontmatter.
+    const retrieval = input.retrieval && typeof input.retrieval === "object" && !Array.isArray(input.retrieval) ? input.retrieval : {};
     try {
       this.db.prepare(`INSERT INTO skills
-        (id,name,description,instructions,version,scope,value_score,enabled,created_at,status,updated_at,source)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(skillId, input.name, input.description, input.instructions, version, input.scope ?? "local", Number(input.value_score ?? 0.5), 1, timestamp, "active", timestamp, input.source ?? "manual");
+        (id,name,description,instructions,version,scope,value_score,enabled,created_at,status,updated_at,source,retrieval_json)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(skillId, input.name, input.description, input.instructions, version, input.scope ?? "local", Number(input.value_score ?? 0.5), 1, timestamp, "active", timestamp, input.source ?? "manual", JSON.stringify(retrieval));
     } catch (error) {
       if (/UNIQUE/i.test(error.message)) throw new HttpError(409, "Skill name already exists", "skill_exists");
       throw error;
@@ -82,10 +84,12 @@ export class AgentService {
     const version = input.version ?? bumpPatch(skill.version);
     const instructions = input.instructions ?? skill.instructions;
     const timestamp = now();
-    this.db.prepare(`UPDATE skills SET name=?,description=?,instructions=?,version=?,scope=?,value_score=?,enabled=?,status=?,updated_at=? WHERE id=?`).run(
+    this.db.prepare(`UPDATE skills SET name=?,description=?,instructions=?,version=?,scope=?,value_score=?,enabled=?,status=?,retrieval_json=?,updated_at=? WHERE id=?`).run(
       input.name ?? skill.name, input.description ?? skill.description, instructions, version, input.scope ?? skill.scope,
       Number(input.value_score ?? skill.value_score), input.enabled === undefined ? skill.enabled : input.enabled ? 1 : 0,
-      input.status ?? skill.status, timestamp, skillId,
+      input.status ?? skill.status,
+      JSON.stringify(input.retrieval && typeof input.retrieval === "object" && !Array.isArray(input.retrieval) ? input.retrieval : JSON.parse(skill.retrieval_json || "{}")),
+      timestamp, skillId,
     );
     if (version !== skill.version || instructions !== skill.instructions) this.db.prepare(`INSERT OR IGNORE INTO skill_versions
       (id,skill_id,version,instructions,author,change_summary,created_at) VALUES (?,?,?,?,?,?,?)`).run(id("skv"), skillId, version, instructions, input.author ?? "local-user", input.change_summary ?? "Skill updated", timestamp);
@@ -192,16 +196,42 @@ export class AgentService {
     };
   }
 
+  /** ADR-015 (C): merge retrieval parameters declared by activated skills.
+   *  multihop/include_raw: any true wins; top_k: maximum; directories: union. */
+  retrievalParamsFromSkills() {
+    const rows = this.db.prepare(`SELECT s.retrieval_json FROM skills s JOIN agent_skills a ON a.skill_id=s.id
+      WHERE a.agent_id='knowledge-agent' AND s.enabled=1`).all();
+    const params = {};
+    for (const row of rows) {
+      let retrieval = {};
+      try { retrieval = JSON.parse(row.retrieval_json || "{}"); } catch { /* ignore malformed */ }
+      if (typeof retrieval.multihop === "boolean") params.multihop = params.multihop === true ? true : retrieval.multihop;
+      if (Number.isFinite(Number(retrieval.top_k))) params.top_k = Math.max(Number(params.top_k ?? 0), Number(retrieval.top_k));
+      if (typeof retrieval.include_raw === "boolean") params.include_raw = params.include_raw === true ? true : retrieval.include_raw;
+      if (Array.isArray(retrieval.directories)) {
+        params.directories = [...new Set([...(params.directories ?? []), ...retrieval.directories.map(String)])];
+      }
+    }
+    return params;
+  }
+
   async ask(input) {
     if (!input.kb_id || !String(input.question ?? "").trim()) {
       throw new HttpError(400, "kb_id and question are required", "invalid_agent_request");
     }
+    // ADR-015 (C): activated skills inject retrieval parameters; explicit
+    // caller parameters always win.
+    const skillParams = this.retrievalParamsFromSkills();
+    const mergedInput = { ...input };
+    for (const [key, value] of Object.entries(skillParams)) {
+      if (mergedInput[key] === undefined) mergedInput[key] = value;
+    }
     const question = String(input.question).trim();
     const runId = id("run");
     const precomputedSources = this.semanticIndex?.enabled()
-      ? await this.semanticIndex.search(input.kb_id, question, input)
+      ? await this.semanticIndex.search(input.kb_id, question, mergedInput)
       : undefined;
-    let prepared = await this.pythonAgent.prepare({ ...input, question, ...(precomputedSources ? { precomputed_sources: precomputedSources } : {}) });
+    let prepared = await this.pythonAgent.prepare({ ...mergedInput, question, ...(precomputedSources ? { precomputed_sources: precomputedSources } : {}) });
     let effectiveQuestion = question;
     // RAG phase 2 (Q9): zero-evidence first round -> ask a real LLM to rewrite
     // the question into a more searchable form and retry once. Skipped when no
@@ -210,10 +240,10 @@ export class AgentService {
       const rewritten = await this.rewriteQuestion(question, input.model ?? "auto");
       if (rewritten && rewritten !== question) {
         const recomputed = this.semanticIndex?.enabled()
-          ? await this.semanticIndex.search(input.kb_id, rewritten, input)
+          ? await this.semanticIndex.search(input.kb_id, rewritten, mergedInput)
           : undefined;
         const retried = await this.pythonAgent.prepare({
-          ...input, question: rewritten,
+          ...mergedInput, question: rewritten,
           ...(recomputed ? { precomputed_sources: recomputed } : {}),
         });
         if (retried.sources.length > 0) {
@@ -315,7 +345,12 @@ function parseSkillMarkdown(text) {
     const key = rawLine.slice(0, separator).trim();
     let value = rawLine.slice(separator + 1).trim();
     value = value.replace(/^['"]|['"]$/g, "");
-    metadata[key] = value;
+    // ADR-015 (C): structured values (e.g. retrieval: {"multihop": true}).
+    if (value.startsWith("{") || value.startsWith("[")) {
+      try { metadata[key] = JSON.parse(value); } catch { metadata[key] = value; }
+    } else {
+      metadata[key] = value;
+    }
   }
   return { ...metadata, instructions: match[2].trim() };
 }

@@ -48,6 +48,7 @@ ATLASGATE_PYTHON=python3 npm start
 | `ATLASGATE_WIKI_INGEST_MODE` | `review` | `review` 或 `auto` |
 | `ATLASGATE_WIKI_SYNC_DIR` | `knowledge` | 单向 Markdown 镜像目录 |
 | `ATLASGATE_QUERY_REWRITE_ENABLED` | `true` | 是否允许零证据问题改写后重试 |
+| `ATLASGATE_QUERY_SEDIMENT_ENABLED` | `true` | 是否允许问答自动沉淀进 Wiki（相似问题≥3次+质量规则，或显式请求） |
 
 未配置 Embedding 服务时，`hybrid` 会退化为本地词法检索。feature hashing 向量是离线特征，不得标记成语义 Embedding。
 

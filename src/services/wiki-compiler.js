@@ -1,6 +1,6 @@
 import { HttpError } from "../core/http.js";
 import { parseFrontmatter, serializeFrontmatter } from "../core/frontmatter.js";
-import { id, now, sha256 } from "../core/utils.js";
+import { id, now, sha256, tokenize } from "../core/utils.js";
 import {
   SYSTEM_PAGE_PATHS, WIKI_CONFIDENCE_LEVELS, WIKI_PAGE_TYPES, WIKI_TAXONOMY_DIRS,
 } from "./knowledge.js";
@@ -387,7 +387,9 @@ export class WikiCompiler {
 
   /**
    * Persist a valuable query answer as a wiki page (queries/<slug>.md).
-   * Deterministic assembly — no extra LLM call. D8: opt-in via save_to_wiki.
+   * Deterministic assembly — no extra LLM call. ADR-015/Q4C: smart
+   * classification links a strong concept/entity match (hybrid retrieval
+   * top-1) via [[wikilink]] instead of leaving the query page isolated.
    */
   saveQueryAnswer(kbId, input) {
     const kb = this.knowledge.getKnowledgeBase(kbId);
@@ -400,15 +402,27 @@ export class WikiCompiler {
     const slug = slugify(question).slice(0, 80) || `query-${Date.now()}`;
     const path = `queries/${slug}.md`;
     const timestamp = now();
+    // Smart classification (Q4C): link a strong existing concept/entity match.
+    let linkTarget = null;
+    try {
+      const hits = this.knowledge.search(kbId, question, { top_k: 1, min_score: 0 });
+      const top = hits[0];
+      if (top && (top.path.startsWith("concepts/") || top.path.startsWith("entities/")) && top.score >= 0.2) {
+        linkTarget = top.path;
+      }
+    } catch { /* search is best-effort for classification */ }
+    const metadata = {
+      type: "query", title: (input.title ?? question).slice(0, 120),
+      sources, confidence: "INFERRED", tags: [], created: timestamp,
+    };
+    if (linkTarget) metadata.linked_to = linkTarget;
     const content = [
-      serializeFrontmatter({
-        type: "query", title: (input.title ?? question).slice(0, 120),
-        sources, confidence: "INFERRED", tags: [], created: timestamp,
-      }),
+      serializeFrontmatter(metadata),
       "",
       `# ${input.title ?? question}`,
       "",
       answer,
+      linkTarget ? `\n相关页面：[[${linkTarget.replace(/\.md$/i, "")}]]` : "",
       "",
     ].join("\n");
     const batchId = id("bat");
@@ -417,10 +431,59 @@ export class WikiCompiler {
       author: "wiki-compiler", submitted_by: "wiki-compiler",
       base_version: kb.master_version, batch_id: batchId,
     });
-    this.knowledge.logWiki(kbId, kb.master_version, "query", `Saved query answer to ${path} (change ${submitted.change.id})`);
+    this.knowledge.logWiki(kbId, kb.master_version, "query", `Saved query answer to ${path} (change ${submitted.change.id})${linkTarget ? `, linked to ${linkTarget}` : ""}`);
     let published = null;
     if (kb.ingest_mode === "auto") published = this.knowledge.merge(kbId, `Save query: ${question.slice(0, 80)}`).version;
-    return { path, change: submitted.change, published };
+    return { path, change: submitted.change, published, linked_to: linkTarget };
+  }
+
+  /** ADR-015/Q1/Q2: count similar past questions in agent_runs (30-day window,
+   *  bigram Jaccard). Used by autoSediment to detect repeated questions. */
+  similarQuestionCount(kbId, question, { sinceDays = 30, minJaccard = 0.3 } = {}) {
+    const since = new Date(Date.now() - sinceDays * 86_400_000).toISOString();
+    const rows = this.db.prepare("SELECT question FROM agent_runs WHERE created_at >= ? AND question IS NOT NULL").all(since);
+    const queryTokens = new Set(tokenize(String(question ?? "")));
+    if (!queryTokens.size) return 0;
+    let count = 0;
+    for (const row of rows) {
+      const other = new Set(tokenize(String(row.question ?? "")));
+      const shared = [...queryTokens].filter((tok) => other.has(tok)).length;
+      const union = queryTokens.size + other.size - shared;
+      if (union > 0 && shared / union >= minJaccard) count += 1;
+    }
+    return count;
+  }
+
+  /** ADR-015/Q2: rule-based quality gate — ≥2 cited sources, no
+   *  insufficient-evidence marker, substantial answer body. */
+  isHighQuality(sources, answer) {
+    if (!Array.isArray(sources) || sources.length < 2) return false;
+    if (/证据不足|没有找到足够相关|insufficient evidence|no relevant|not found|no unsupported/i.test(String(answer ?? ""))) return false;
+    return String(answer ?? "").trim().length >= 80;
+  }
+
+  /** ADR-015/Q1/Q2/Q5: sediment a Q&A into the wiki. Triggered when the user
+   *  explicitly requests it (save_to_wiki / sediment), OR automatically when
+   *  the same question has been asked ≥3 times and the answer passes the
+   *  quality rule. Follows the KB ingest_mode audit chain (review pending /
+   *  auto merge). Returns null when nothing qualifies. */
+  autoSediment(kbId, input) {
+    if (this.config.querySedimentEnabled === false) return null;
+    const question = String(input.question ?? "").trim();
+    const answer = String(input.answer ?? "").trim();
+    const sources = Array.isArray(input.sources) ? input.sources : [];
+    if (!question || !answer) return null;
+    const explicit = input.explicit === true;
+    // Explicit requests always qualify (user intent); auto-sedimentation needs
+    // evidence + repeated similar questions + the quality rule.
+    const qualifies = explicit
+      || (sources.length >= 2 && this.similarQuestionCount(kbId, question) >= 3 && this.isHighQuality(sources, answer));
+    if (!qualifies) return null;
+    return this.saveQueryAnswer(kbId, {
+      question, answer, sources,
+      title: input.title ?? question,
+      reason: explicit ? "explicit" : "auto",
+    });
   }
 
   // ---------------------------------------------------------------------

@@ -62,6 +62,9 @@ export function loadConfig(overrides = {}) {
     // a real LLM to rewrite the question into a more searchable form and retry
     // once. No-ops without a real (non-mock) provider.
     queryRewriteEnabled: overrides.queryRewriteEnabled ?? bool(process.env.ATLASGATE_QUERY_REWRITE_ENABLED, true),
+    // ADR-015: auto-sediment repeated high-quality Q&A into the wiki
+    // (similar question asked >=3 times + quality rule, or explicit request).
+    querySedimentEnabled: overrides.querySedimentEnabled ?? bool(process.env.ATLASGATE_QUERY_SEDIMENT_ENABLED, true),
     wiki: {
       defaultIngestMode: overrides.wikiDefaultIngestMode ?? process.env.ATLASGATE_WIKI_INGEST_MODE ?? "review",
       maxPagesPerSource: Math.max(1, Number(overrides.wikiMaxPagesPerSource ?? process.env.ATLASGATE_WIKI_MAX_PAGES_PER_SOURCE ?? 20)),

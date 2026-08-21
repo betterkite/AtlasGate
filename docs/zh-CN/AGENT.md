@@ -49,8 +49,15 @@ validate → 检索 Master 证据（混合检索，默认排除系统页）
 
 - 上传 `SKILL.md`（frontmatter: name/description/version/scope + 正文）或 `skill.json`；支持版本、导入账本、合并、推荐。
 - attach 到 `knowledge-agent` 后，其 instructions 会注入回答 prompt。
+- **检索策略绑定（ADR-015/C）**：SKILL.md frontmatter 可声明 `retrieval: {"multihop": true, "top_k": 8, "include_raw": false, "directories": ["concepts/"]}`，attach 后自动注入检索参数（multihop 任一 true 即开、top_k 取最大、include_raw 任一 true 即开）；调用方显式参数优先于技能。
 - 内置：grounded-research（引用证据）、data-analysis（先验证再分析）。
 - 安全：技能包是"内容"不是可执行代码；平台级签名/评测是后续工作。
+
+## 5.1 Memory（记忆）与知识闭环（ADR-015/A）
+
+- `use_memory:true` + session 时，问答摘要按会话注入 prompt（情景记忆）。
+- **沉淀**：`save_to_wiki` / `sediment` 显式沉淀，或相似问题 ≥3 次 + 质量规则自动沉淀，问答成为 `queries/` wiki 页面（走审计链，可删可回滚）；沉淀页通过 `[[wikilink]]` 关联到概念/实体页。
+- 每次回答引用页面累计 `query_hits`（图谱热度，30 天窗口）。
 
 ## 6. 审计
 

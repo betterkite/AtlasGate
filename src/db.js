@@ -200,6 +200,14 @@ CREATE TABLE IF NOT EXISTS semantic_vectors (
 );
 CREATE INDEX IF NOT EXISTS idx_semantic_vectors_kb_version ON semantic_vectors(kb_id, version);
 
+-- ADR-015 (B): usage heat — how often agent answers cited each knowledge page
+-- (recent 30-day window; recordQueryHits resets the counter after 30 days idle).
+CREATE TABLE IF NOT EXISTS wiki_query_hits (
+  kb_id TEXT NOT NULL REFERENCES knowledge_bases(id) ON DELETE CASCADE,
+  path TEXT NOT NULL, hits INTEGER NOT NULL DEFAULT 0,
+  last_hit_at TEXT NOT NULL, PRIMARY KEY(kb_id, path)
+);
+
 CREATE TABLE IF NOT EXISTS memories (
   id TEXT PRIMARY KEY, session_id TEXT NOT NULL, agent_id TEXT NOT NULL,
   content TEXT NOT NULL, source_run_id TEXT, created_at TEXT NOT NULL
@@ -208,7 +216,8 @@ CREATE TABLE IF NOT EXISTS memories (
 CREATE TABLE IF NOT EXISTS skills (
   id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT NOT NULL,
   instructions TEXT NOT NULL, version TEXT NOT NULL, scope TEXT NOT NULL DEFAULT 'local',
-  value_score REAL NOT NULL DEFAULT 0.5, enabled INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL
+  value_score REAL NOT NULL DEFAULT 0.5, enabled INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL,
+  retrieval_json TEXT NOT NULL DEFAULT '{}'
 );
 
 CREATE TABLE IF NOT EXISTS agent_skills (
@@ -354,6 +363,7 @@ function migrateSchema(db) {
     skills: [
       ["status", "TEXT NOT NULL DEFAULT 'active'"], ["usage_count", "INTEGER NOT NULL DEFAULT 0"],
       ["success_count", "INTEGER NOT NULL DEFAULT 0"], ["updated_at", "TEXT"], ["source", "TEXT NOT NULL DEFAULT 'manual'"],
+      ["retrieval_json", "TEXT NOT NULL DEFAULT '{}'"],
     ],
     providers: [
       ["balance_endpoint", "TEXT NOT NULL DEFAULT ''"], ["balance_amount", "REAL"],

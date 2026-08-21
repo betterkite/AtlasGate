@@ -222,10 +222,17 @@ export function createApp(overrides = {}) {
 
   router.post("/api/agents/knowledge/ask", async ({ body }) => {
     const result = await agent.ask(body);
-    if (body.save_to_wiki === true && body.kb_id) {
-      result.saved_to_wiki = wikiCompiler.saveQueryAnswer(body.kb_id, {
-        question: body.question, answer: result.answer, sources: result.sources, title: body.query_title,
+    // ADR-015 (B): record which pages the answer cited (usage heat).
+    if (body.kb_id) knowledge.recordQueryHits(body.kb_id, (result.sources ?? []).map((source) => source.path));
+    // ADR-015 (A): sediment Q&A into the wiki — explicit request (save_to_wiki /
+    // sediment) or auto (same question asked >=3 times + quality rule).
+    if (body.kb_id) {
+      const sediment = wikiCompiler.autoSediment(body.kb_id, {
+        question: body.question, answer: result.answer, sources: result.sources,
+        explicit: body.save_to_wiki === true || body.sediment === true,
+        title: body.query_title,
       });
+      if (sediment) result.saved_to_wiki = sediment;
     }
     return { body: result };
   });

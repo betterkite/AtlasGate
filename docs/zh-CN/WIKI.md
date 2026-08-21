@@ -98,9 +98,11 @@ question
 - 结构级（孤立页/断链/index 一致性）纯 SQL、免费，**每次发布自动跑**；LLM 级（矛盾/过时/数据缺口）需真实模型，手动触发。
 - 报告可 ack/忽略；missing_page 报告可**一键创建 stub 页面**（走 Change）。
 
-## 9. 查询回存（save_to_wiki）
+## 9. 问答沉淀（save_to_wiki / 自动沉淀，ADR-015）
 
-知识 Agent 回答时勾选「回存 Wiki」（或 API `save_to_wiki:true`），答案保存为 `queries/<slug>.md`（含 `sources[]` 溯源），review 模式留 pending、auto 模式直接发布。
+知识 Agent 回答时勾选「回存 Wiki」（或 API `save_to_wiki:true` / `sediment:true`）显式沉淀；**或自动触发**：同一/相似问题被问过 ≥3 次且回答满足质量规则（引用 ≥2 个来源、无"证据不足"、有实质内容）时自动沉淀。产物为 `queries/<slug>.md`（含 `sources[]` 溯源 + `[[wikilink]]` 智能关联到匹配的概念/实体页），走标准 Change 审计链（review 留 pending、auto 直接发布），**可编辑、可删除、可回滚**。开关：`ATLASGATE_QUERY_SEDIMENT_ENABLED`（默认开）。
+
+**引用热度（记忆即使用痕迹）**：每次 Agent 回答引用的页面都会累计 `query_hits`（近 30 天窗口），图谱节点与悬停卡显示"问答引用 N 次"，供识别高频使用的知识页。
 
 ## 10. 相关文档
 

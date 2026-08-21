@@ -372,6 +372,7 @@ class ForceGraphView {
     if (!this.card) return;
     const degree = (this.layout.adjacency.get(node.id) ?? new Map()).size;
     const community = node.kind === "document" ? (node.community ?? 0) : null;
+    const heat = node.kind === "document" && node.query_hits > 0 ? ` · 问答引用 ${node.query_hits} 次` : "";
     const kindLabel = { document: "页面", heading: "标题", tag: "标签", reference: "引用" }[node.kind] ?? node.kind;
     const open = pinned && node.kind === "document" && this.options.onOpenPage
       ? `<button class="button primary compact-button" data-graph-open>打开页面</button>`
@@ -380,7 +381,7 @@ class ForceGraphView {
       <div class="graph-card-title"><i class="dot" style="background:${nodeColor(node, this.graph?.communities)}"></i>${escapeHtml(node.label ?? node.id)}</div>
       <div class="graph-card-row">类型：${kindLabel}</div>
       ${node.document_path ? `<div class="graph-card-row mono">${escapeHtml(node.document_path)}</div>` : ""}
-      <div class="graph-card-row">度：${degree}${community != null ? ` · 社区 #${community}` : ""}</div>
+      <div class="graph-card-row">度：${degree}${community != null ? ` · 社区 #${community}` : ""}${heat}</div>
       ${open}`;
     this.card.hidden = false;
     if (x == null || pinned) {

@@ -588,14 +588,35 @@ export class KnowledgeService {
     const nodesWithCommunity = nodes.map((node) => node.kind === "document"
       ? { ...node, community: communities[node.id] ?? 0 }
       : node);
+    // ADR-015 (B): attach usage heat (query_hits) so the console can tint
+    // nodes by how often agent answers cited them.
+    const hits = new Map(this.db.prepare("SELECT path, hits FROM wiki_query_hits WHERE kb_id=?").all(kbId)
+      .map((row) => [row.path, row.hits]));
+    const nodesWithHits = nodesWithCommunity.map((node) => node.kind === "document"
+      ? { ...node, query_hits: hits.get(node.document_path) ?? 0 }
+      : node);
     return {
       kb_id: kbId,
       version: selectedVersion,
-      nodes: nodesWithCommunity,
+      nodes: nodesWithHits,
       edges,
       communities: communitySummary,
       insights,
     };
+  }
+
+  /** ADR-015 (B): record that agent answers cited these pages. Counter runs
+   *  on a 30-day window: a page idle for >30 days resets to 1. */
+  recordQueryHits(kbId, paths) {
+    const unique = [...new Set((Array.isArray(paths) ? paths : []).map(String).filter(Boolean))];
+    if (!unique.length) return 0;
+    const upsert = this.db.prepare(`INSERT INTO wiki_query_hits (kb_id,path,hits,last_hit_at) VALUES (?,?,1,?)
+      ON CONFLICT(kb_id,path) DO UPDATE SET
+        hits = CASE WHEN julianday(excluded.last_hit_at) - julianday(last_hit_at) > 30 THEN 1 ELSE hits + 1 END,
+        last_hit_at = excluded.last_hit_at`);
+    const timestamp = now();
+    for (const path of unique) upsert.run(kbId, path, timestamp);
+    return unique.length;
   }
 
   search(kbId, query, options = {}) {

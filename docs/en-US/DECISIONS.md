@@ -19,3 +19,6 @@
 
 Each decision has an explicit production boundary. Later changes should add a new ADR or update the affected decision with migration and test impact.
 
+## ADR-015: Memory × knowledge × graph × skill-retrieval integration
+
+Grilling Q1~Q8 (three directions). **A — query sedimentation**: questions asked ≥3 times (token/vector similarity over `agent_runs`) or explicitly requested, with rule-verified quality (≥2 citations, no insufficient-evidence marker, substantial content), are sedimented into the wiki — smart classification links strong matches to existing `concepts/`/`entities/` pages from a `queries/<slug>.md` page (relate, never rewrite), otherwise lands in `queries/`; audit follows KB `ingest_mode`; existing same-theme pages are updated; sedimented pages are normal editable/deletable wiki pages. **B — memory in the graph**: knowledge pages carry a `query_hits` usage-heat count (30-day window) surfaced in the graph API for console tinting. **C — skill × retrieval**: SKILL.md frontmatter gains a structured `retrieval` field; activated skills inject retrieval parameters into agent ask.
