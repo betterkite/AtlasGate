@@ -51,7 +51,7 @@ function scriptedProvider(t, { answer }) {
 const GOOD_ANSWER = "路由与网关共同构成统一入口：路由负责按质量、成本、延迟选择上游模型并支持故障转移，网关负责限流、配额与审计账本，二者结合实现多协议统一接入与可观测性，让团队只需关心业务而无需各自对接模型厂商。";
 const WEAK_ANSWER = "没有找到足够相关的证据，因此无法回答这个问题。";
 
-async function sedimentApp(t, { answer = GOOD_ANSWER, overrides = {} } = {}) {
+async function sedimentApp(t, { answer = GOOD_ANSWER, overrides = {}, ingestMode = "auto" } = {}) {
   const llmBase = await scriptedProvider(t, { answer });
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "atlasgate-wiki7-"));
   const dbPath = path.join(directory, "atlasgate.db");
@@ -63,7 +63,7 @@ async function sedimentApp(t, { answer = GOOD_ANSWER, overrides = {} } = {}) {
     name: "Scripted", kind: "openai", base_url: llmBase,
     models: ["compile-model"], quality: 0.9, latency_hint_ms: 50, reliability: 0.99,
   });
-  const kb = app.services.knowledge.createKnowledgeBase({ name: "Sediment", ingest_mode: "auto" });
+  const kb = app.services.knowledge.createKnowledgeBase({ name: "Sediment", ingest_mode: ingestMode });
   await app.services.wikiCompiler.enqueue(kb.id, { kind: "paste", filename: "demo.md", text: "路由与网关。" });
   const deadline = Date.now() + 12_000;
   while (Date.now() < deadline) {
@@ -119,6 +119,18 @@ test("low-quality answer (insufficient evidence) is not sedimented", async (t) =
   assert.equal(result.saved_to_wiki, undefined, "insufficient-evidence answer must not sediment");
   const pending = app.db.prepare("SELECT COUNT(*) AS c FROM knowledge_changes WHERE kb_id=? AND path LIKE 'queries/%'").get(kb.id).c;
   assert.equal(pending, 0);
+});
+
+test("repeated sedimentation of the same question updates one pending change (Q6A)", async (t) => {
+  const { app, kb, ask } = await sedimentApp(t, { ingestMode: "review" });
+  const first = await ask({ question: "向顶天 调查 线索", save_to_wiki: true });
+  assert.ok(first.saved_to_wiki, "first sediment works");
+  const second = await ask({ question: "向顶天 调查 线索", save_to_wiki: true });
+  assert.ok(second.saved_to_wiki, "second sediment works");
+  assert.equal(second.saved_to_wiki.change.id, first.saved_to_wiki.change.id, "same slug must reuse the pending change");
+  const pending = app.db.prepare("SELECT COUNT(*) AS c FROM knowledge_changes WHERE kb_id=? AND path=? AND status='pending'")
+    .get(kb.id, first.saved_to_wiki.path).c;
+  assert.equal(pending, 1, "no duplicate pending changes for the same slug");
 });
 
 test("sedimentation can be disabled via config", async (t) => {

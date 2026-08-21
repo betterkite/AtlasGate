@@ -426,15 +426,30 @@ export class WikiCompiler {
       "",
     ].join("\n");
     const batchId = id("bat");
-    const submitted = this.knowledge.submitChange(kbId, {
-      path, content, operation: "upsert",
-      author: "wiki-compiler", submitted_by: "wiki-compiler",
-      base_version: kb.master_version, batch_id: batchId,
-    });
-    this.knowledge.logWiki(kbId, kb.master_version, "query", `Saved query answer to ${path} (change ${submitted.change.id})${linkTarget ? `, linked to ${linkTarget}` : ""}`);
+    // ADR-015/Q6A: an existing pending change for the same slug is updated in
+    // place instead of piling up duplicate pending changes.
+    const existingPending = this.db.prepare(
+      "SELECT * FROM knowledge_changes WHERE kb_id=? AND path=? AND status='pending' ORDER BY created_at DESC,rowid DESC LIMIT 1",
+    ).get(kbId, path);
+    let changeRow;
+    let updated = false;
+    if (existingPending) {
+      changeRow = this.knowledge.updateChange(kbId, existingPending.id, {
+        content, operation: "upsert", author: "wiki-compiler", submitted_by: "wiki-compiler",
+      });
+      updated = true;
+    } else {
+      changeRow = this.knowledge.submitChange(kbId, {
+        path, content, operation: "upsert",
+        author: "wiki-compiler", submitted_by: "wiki-compiler",
+        base_version: kb.master_version, batch_id: batchId,
+      }).change;
+    }
+    this.knowledge.logWiki(kbId, kb.master_version, "query",
+      `${updated ? "Updated" : "Saved"} query answer to ${path} (change ${changeRow.id})${linkTarget ? `, linked to ${linkTarget}` : ""}`);
     let published = null;
     if (kb.ingest_mode === "auto") published = this.knowledge.merge(kbId, `Save query: ${question.slice(0, 80)}`).version;
-    return { path, change: submitted.change, published, linked_to: linkTarget };
+    return { path, change: changeRow, published, linked_to: linkTarget };
   }
 
   /** ADR-015/Q1/Q2: count similar past questions in agent_runs (30-day window,
