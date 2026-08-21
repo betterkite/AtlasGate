@@ -1572,6 +1572,10 @@ function compact(value) {
 const COMMUNITY_PALETTE = ["#087f6d", "#3f6f93", "#c28b16", "#8a5a9e", "#c25b4e", "#4e7ac2", "#6d8a3f", "#9b5c74", "#2f8f9b", "#b06f3f"];
 
 async function renderWiki(app) {
+  // The page tree is its own scroll container (max-height 78vh, overflow auto);
+  // keep its scrollTop across re-renders so clicking a page doesn't jump to top.
+  const oldTree = document.querySelector(".wiki-tree");
+  const treeScroll = oldTree ? oldTree.scrollTop : 0;
   const kbs = await api("/api/knowledge-bases");
   if (!state.kbId || !kbs.some((kb) => kb.id === state.kbId)) state.kbId = kbs[0]?.id ?? "";
   const selected = kbs.find((kb) => kb.id === state.kbId);
@@ -1719,6 +1723,12 @@ async function renderWiki(app) {
   });
   if (graph.nodes.length) requestAnimationFrame(redrawGraph);
   wireGraphToolbar(redrawGraph);
+  if (treeScroll > 0) {
+    requestAnimationFrame(() => {
+      const tree = document.querySelector(".wiki-tree");
+      if (tree) tree.scrollTop = treeScroll;
+    });
+  }
 }
 
 function frontmatterBadges(page) {
