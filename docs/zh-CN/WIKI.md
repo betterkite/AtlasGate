@@ -131,7 +131,7 @@ question
 - **词法命中**：专有名词、精确用词；**向量命中**：同义改写、语义相近页面（问"丹药反噬"能带出写"脱锚副作用"的页面）。
 - **页面级**：每页一个向量（`semantic_vectors` 表，版本化）；排除系统页与降级存档页（`include_system` / `include_raw` 可放开）。
 - **降级**：未配置 embedding 服务时自动退回纯词法（与旧行为完全一致）；`retrievalMode=local` 可显式关闭向量。
-- **部署 embedding**（可选）：本地 `python3 python/atlasgate_agent/embedding_worker.py --model <bge-small-zh 目录>` 起 ONNX 服务（唯一新增依赖 `onnxruntime`），设 `ATLASGATE_EMBEDDING_BASE_URL=http://127.0.0.1:8031/v1`；或接任意 OpenAI 兼容 `/v1/embeddings` API。DeepSeek 官方无 embedding 模型。
+- **部署 embedding**（可选，本仓库开发机已激活）：`uv venv .venv-embed --python 3.12 && uv pip install --python .venv-embed/bin/python onnxruntime transformers torch`（CPU 版 torch）→ 下载 bge-small-zh-v1.5 权重到 `python/models/` → `.venv-embed/bin/python python/atlasgate_agent/embedding_worker.py --model python/models/bge-small-zh-v1.5 --port 8031` → 设 `ATLASGATE_EMBEDDING_BASE_URL=http://127.0.0.1:8031/v1` 重启。worker 支持 ONNX 或 PyTorch（transformers）两种后端；也可接任意 OpenAI 兼容 `/v1/embeddings` API。DeepSeek 官方无 embedding 模型。
 - **纯向量**：`retrievalMode=qdrant`（需 Qdrant 服务，保留为可选后端）。
 - **伪重排（阶段 2）**：RRF 融合后，图谱 related 边度数高的页面（更核心）获得小幅加成，只打破平局不颠覆排序（零新依赖）。
 - **低置信查询改写（阶段 2）**：首轮检索 0 命中且路由到真实模型时，LLM 把问题改写成更可检索的形式重试一次；结果在响应里以 `rewritten_question` 返回（`ATLASGATE_QUERY_REWRITE_ENABLED` 默认开，mock 路由下自动跳过）。

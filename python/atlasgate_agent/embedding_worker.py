@@ -37,58 +37,76 @@ MODEL_FILE = "model.onnx"  # tokenizer files live next to it (tokenizer.json / v
 
 
 class EmbeddingRuntime:
-    """Lazy ONNX runtime: loads model + tokenizer on first request."""
+    """Lazy embedding runtime: prefers ONNX, falls back to PyTorch (transformers).
+
+    Loads the model + tokenizer on first request. The PyTorch path runs
+    BAAI/bge-small-zh-v1.5 directly (24M params, CPU is fine) — no ONNX export
+    needed. Returns 503 when neither runtime is available so AtlasGate degrades
+    to pure lexical retrieval.
+    """
 
     def __init__(self, model_dir: str) -> None:
         self.model_dir = model_dir
         self._session: Any = None
+        self._model: Any = None
         self._tokenizer: Any = None
+        self._backend: str = ""
         self._lock = threading.Lock()
         self.dims = 512
         self.error: str | None = None
 
     def _load(self) -> None:
         with self._lock:
-            if self._session is not None:
+            if self._session is not None or self._model is not None:
                 return
+            # 1) ONNX
             try:
                 import onnxruntime as ort  # type: ignore
-            except Exception as exc:  # pragma: no cover - env dependent
-                self.error = f"onnxruntime not installed: {exc}"
-                return
-            model_path = os.path.join(self.model_dir, MODEL_FILE)
-            if not os.path.exists(model_path):
-                self.error = f"model file not found: {model_path}"
-                return
-            sess_options = ort.SessionOptions()
-            sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-            self._session = ort.InferenceSession(
-                model_path, sess_options, providers=["CPUExecutionProvider"]
-            )
-            try:
-                from transformers import AutoTokenizer  # type: ignore
-
-                self._tokenizer = AutoTokenizer.from_pretrained(self.model_dir)
+                model_path = os.path.join(self.model_dir, MODEL_FILE)
+                if os.path.exists(model_path):
+                    sess_options = ort.SessionOptions()
+                    sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+                    self._session = ort.InferenceSession(model_path, sess_options, providers=["CPUExecutionProvider"])
+                    self._backend = "onnx"
             except Exception:
-                # Fallback minimal tokenizer is not implemented; refuse clearly.
-                self.error = "AutoTokenizer unavailable (pip install transformers) or tokenizer files missing"
                 self._session = None
+            # 2) PyTorch (transformers AutoModel) — works with the stock
+            #    BAAI/bge-small-zh-v1.5 checkpoint (model.safetensors).
+            if self._session is None:
+                try:
+                    from transformers import AutoModel, AutoTokenizer  # type: ignore
+                    self._tokenizer = AutoTokenizer.from_pretrained(self.model_dir)
+                    self._model = AutoModel.from_pretrained(self.model_dir)
+                    self._model.eval()
+                    self._backend = "torch"
+                    self.dims = self._model.config.hidden_size or 512
+                except Exception as exc:
+                    self.error = f"no embedding runtime available (onnxruntime or transformers+torch): {exc}"
             if self._session is not None:
                 self.dims = self._session.get_outputs()[0].shape[-1] or 512
 
     def encode(self, texts: list[str]) -> list[list[float]] | None:
         self._load()
-        if self._session is None or self._tokenizer is None:
+        if self._session is None and self._model is None:
             return None
-        # bge-small-zh: mean-pooled last_hidden_state + normalization.
-        enc = self._tokenizer(texts, padding=True, truncation=True, max_length=512, return_tensors="np")
-        input_names = [i.name for i in self._session.get_inputs()]
-        inputs = {name: enc[name] for name in input_names if name in enc}
-        outputs = self._session.run(None, inputs)[0]
-        attention = enc["attention_mask"][:, :, None]
-        pooled = (outputs * attention).sum(axis=1) / attention.sum(axis=1)
-        norms = ((pooled ** 2).sum(axis=1, keepdims=True)) ** 0.5
-        return (pooled / norms).tolist()
+        if self._backend == "onnx":
+            enc = self._tokenizer(texts, padding=True, truncation=True, max_length=512, return_tensors="np")
+            input_names = [i.name for i in self._session.get_inputs()]
+            inputs = {name: enc[name] for name in input_names if name in enc}
+            outputs = self._session.run(None, inputs)[0]
+            attention = enc["attention_mask"][:, :, None]
+            pooled = (outputs * attention).sum(axis=1) / attention.sum(axis=1)
+            norms = ((pooled ** 2).sum(axis=1, keepdims=True)) ** 0.5
+            return (pooled / norms).tolist()
+        # torch backend: mean pooling + L2 normalize (bge convention).
+        import torch  # type: ignore
+        with torch.inference_mode():
+            enc = self._tokenizer(texts, padding=True, truncation=True, max_length=512, return_tensors="pt")
+            outputs = self._model(**enc).last_hidden_state
+            attention = enc["attention_mask"].unsqueeze(-1)
+            pooled = (outputs * attention).sum(dim=1) / attention.sum(dim=1)
+            pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
+            return pooled.tolist()
 
 
 class EmbeddingHandler(BaseHTTPRequestHandler):
@@ -114,7 +132,8 @@ class EmbeddingHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path.rstrip("/") == "/health":
-            ok = self.runtime._session is not None  # noqa: SLF001
+            self.runtime._load()  # noqa: SLF001
+            ok = self.runtime._session is not None or self.runtime._model is not None  # noqa: SLF001
             self._json(200, {"status": "ok" if ok else "unavailable", "dims": self.runtime.dims, "error": self.runtime.error})
         else:
             self._json(404, {"error": {"message": "not found"}})

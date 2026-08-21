@@ -13,3 +13,7 @@ knowledge/
 # Runtime artifacts
 data/server.log
 data/backups/
+
+# Local embedding runtime (uv venv) and downloaded model weights
+.venv-embed/
+python/models/
