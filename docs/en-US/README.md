@@ -6,7 +6,7 @@ This directory contains the English edition of the project documentation. The Ch
 
 ## Getting started
 
-- [Project overview](../../README.en-US.md)
+- [Project overview](../../README.md)
 - [Runtime data directory](../../data/README.en-US.md)
 - [Getting started](GETTING_STARTED.md)
 - [Introduction](INTRODUCTION.md)
