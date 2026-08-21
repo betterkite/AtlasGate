@@ -74,7 +74,72 @@ npm start
 
 打开 **http://127.0.0.1:4310** —— 控制台默认 `admin / atlasgate-admin`；网关 Key `atlasgate-dev-key`。
 
-> 内置 `atlas-mini` mock 可离线验证全链路；配置 OpenAI 兼容 Provider（如 DeepSeek）后启用真实路由与 LLM 编译。稠密检索可完全离线（本地 ONNX embedding 服务 `python/atlasgate_agent/embedding_worker.py`）。
+## 安装与配置（完整清单）
+
+### 1. 基础运行（必装）
+
+| 依赖 | 版本 | 用途 | 安装 |
+| --- | --- | --- | --- |
+| Node.js | 24+（含 `node:sqlite`） | 服务本体 | 官网/包管理器 |
+| Python | 3.11+ | Agent 核心与 PDF 解析（仅标准库） | 官网/包管理器 |
+| npm 依赖 | 无 | —— | **无需 npm install** |
+| pypdf | 已内置 vendored（`python/vendor/`） | PDF 解析 | **无需安装** |
+
+```bash
+npm start   # 零配置即可启动（离线 mock 可验证全链路）
+```
+
+### 2. 稠密检索 Embedding（推荐激活，让 hybrid 语义检索真正生效）
+
+检索默认 `hybrid`（词法 + 向量 RRF）。**未配置 embedding 时自动降级为纯词法**；以下步骤激活真实语义向量（本仓库开发机已按此配置运行）。
+
+**① 建 venv 并安装运行时**（用 `uv`，或系统 `venv` + pip）：
+
+```bash
+uv venv .venv-embed --python 3.12
+uv pip install --python .venv-embed/bin/python torch --index-url https://download.pytorch.org/whl/cpu
+uv pip install --python .venv-embed/bin/python transformers
+uv pip install --python .venv-embed/bin/python onnxruntime   # 可选：仅使用 ONNX 模型时需要
+```
+
+**② 下载 bge-small-zh-v1.5 模型权重**（约 95MB，ModelScope）：
+
+```bash
+mkdir -p python/models/bge-small-zh-v1.5 && cd python/models/bge-small-zh-v1.5
+for f in config.json model.safetensors tokenizer.json tokenizer_config.json vocab.txt \
+         special_tokens_map.json modules.json sentence_bert_config.json; do
+  curl -fL -O "https://modelscope.cn/models/BAAI/bge-small-zh-v1.5/resolve/master/$f"
+done
+cd - >/dev/null
+```
+
+**③ 启动 embedding 服务**（后台，端口 8031）：
+
+```bash
+setsid nohup .venv-embed/bin/python python/atlasgate_agent/embedding_worker.py \
+  --model python/models/bge-small-zh-v1.5 --port 8031 > /tmp/embed-worker.log 2>&1 &
+curl http://127.0.0.1:8031/health        # {"status":"ok","dims":512}
+```
+
+**④ 以该 embedding 服务启动 AtlasGate 并验证**：
+
+```bash
+ATLASGATE_EMBEDDING_BASE_URL=http://127.0.0.1:8031/v1 npm start
+curl http://127.0.0.1:4310/health | python3 -c 'import json,sys; print(json.load(sys.stdin)["retrieval"])'
+# 期望: {"mode":"hybrid","enabled":true,"backend":"local",...}
+```
+
+> 首次提问会自动建立语义索引（`semantic_vectors` 表）；也可手动 `POST /api/knowledge-bases/:id/semantic-index`。`embedding_worker.py` 支持 **PyTorch（transformers）或 ONNX** 两种后端，自动探测。模型与 venv 已 gitignore，不入库。
+
+### 3. 可选配置
+
+| 配置 | 说明 |
+| --- | --- |
+| 外部 Embedding API | 任意 OpenAI 兼容 `/v1/embeddings`：设 `ATLASGATE_EMBEDDING_BASE_URL` 指向它（如 OpenAI `text-embedding-3-small`）。DeepSeek 官方无 embedding 模型 |
+| Qdrant 后端 | `ATLASGATE_RETRIEVAL_MODE=qdrant` + `ATLASGATE_QDRANT_URL`（向量存 Qdrant 而非本地 SQLite） |
+| Docker 部署 | `cp .env.example .env && docker compose up -d --build`（见 docs/zh-CN/DEPLOYMENT.md） |
+| 真实模型路由 | 控制台「模型网关」添加 OpenAI 兼容 Provider（如 DeepSeek `deepseek-chat`），LLM Wiki 编译与 Agent 回答即生效 |
+| 查询改写/问答沉淀 | 默认开启；`ATLASGATE_QUERY_REWRITE_ENABLED` / `ATLASGATE_QUERY_SEDIMENT_ENABLED` 可关 |
 
 ## 模块使用示例（照抄即可复现）
 

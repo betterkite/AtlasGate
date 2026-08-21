@@ -37,7 +37,72 @@ npm start
 
 Open **http://127.0.0.1:4310** — console defaults `admin / atlasgate-admin`; gateway key `atlasgate-dev-key`.
 
-> The built-in `atlas-mini` provider validates the full local path with no real upstream. Configure an OpenAI-compatible Provider (e.g. DeepSeek) for real routing and LLM compilation. Dense retrieval works fully offline with a local ONNX embedding service (`python/atlasgate_agent/embedding_worker.py`).
+## Installation & configuration (complete checklist)
+
+### 1. Base runtime (required)
+
+| Dependency | Version | Purpose | Install |
+| --- | --- | --- | --- |
+| Node.js | 24+ (with `node:sqlite`) | Server | official site / package manager |
+| Python | 3.11+ | Agent core & PDF parsing (stdlib only) | official site / package manager |
+| npm deps | none | — | **no `npm install` needed** |
+| pypdf | vendored (`python/vendor/`) | PDF parsing | **nothing to install** |
+
+```bash
+npm start   # zero-config; the offline mock validates the whole chain
+```
+
+### 2. Dense-retrieval embedding (recommended — activates real semantic vectors)
+
+Retrieval defaults to `hybrid` (lexical + dense RRF). **Without an embedding service it degrades to pure lexical**; the steps below activate real semantic vectors (the dev machine runs exactly this setup).
+
+**① Create a venv and install runtimes** (with `uv`, or system `venv` + pip):
+
+```bash
+uv venv .venv-embed --python 3.12
+uv pip install --python .venv-embed/bin/python torch --index-url https://download.pytorch.org/whl/cpu
+uv pip install --python .venv-embed/bin/python transformers
+uv pip install --python .venv-embed/bin/python onnxruntime   # optional: only needed for the ONNX path
+```
+
+**② Download bge-small-zh-v1.5 weights** (~95MB, ModelScope):
+
+```bash
+mkdir -p python/models/bge-small-zh-v1.5 && cd python/models/bge-small-zh-v1.5
+for f in config.json model.safetensors tokenizer.json tokenizer_config.json vocab.txt \
+         special_tokens_map.json modules.json sentence_bert_config.json; do
+  curl -fL -O "https://modelscope.cn/models/BAAI/bge-small-zh-v1.5/resolve/master/$f"
+done
+cd - >/dev/null
+```
+
+**③ Start the embedding worker** (background, port 8031):
+
+```bash
+setsid nohup .venv-embed/bin/python python/atlasgate_agent/embedding_worker.py \
+  --model python/models/bge-small-zh-v1.5 --port 8031 > /tmp/embed-worker.log 2>&1 &
+curl http://127.0.0.1:8031/health        # {"status":"ok","dims":512}
+```
+
+**④ Start AtlasGate against it and verify**:
+
+```bash
+ATLASGATE_EMBEDDING_BASE_URL=http://127.0.0.1:8031/v1 npm start
+curl http://127.0.0.1:4310/health | python3 -c 'import json,sys; print(json.load(sys.stdin)["retrieval"])'
+# expect: {"mode":"hybrid","enabled":true,"backend":"local",...}
+```
+
+> The semantic index (`semantic_vectors`) builds lazily on the first ask, or manually via `POST /api/knowledge-bases/:id/semantic-index`. `embedding_worker.py` supports **PyTorch (transformers) or ONNX** backends, auto-detected. Model weights and the venv are gitignored.
+
+### 3. Optional configuration
+
+| Option | Notes |
+| --- | --- |
+| External embedding API | Any OpenAI-compatible `/v1/embeddings`: point `ATLASGATE_EMBEDDING_BASE_URL` at it (e.g. OpenAI `text-embedding-3-small`). DeepSeek has no embedding model |
+| Qdrant backend | `ATLASGATE_RETRIEVAL_MODE=qdrant` + `ATLASGATE_QDRANT_URL` (vectors in Qdrant instead of local SQLite) |
+| Docker | `cp .env.example .env && docker compose up -d --build` (see docs/en-US/DEPLOYMENT.md) |
+| Real model routing | Add an OpenAI-compatible Provider in the console (e.g. DeepSeek `deepseek-chat`) to enable LLM compilation and agent answers |
+| Query rewrite / sedimentation | On by default; `ATLASGATE_QUERY_REWRITE_ENABLED` / `ATLASGATE_QUERY_SEDIMENT_ENABLED` to disable |
 
 ## Reproducible module examples
 
